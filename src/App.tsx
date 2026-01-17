@@ -7,6 +7,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ClientDashboard from './pages/ClientDashboard';
 import ContractorDashboard from './pages/ContractorDashboard';
+import Categories from './pages/Categories';
+import Contractors from './pages/Contractors';
+import NewServiceRequest from './pages/NewServiceRequest';
+import WalletDeposit from './pages/WalletDeposit';
+import TransactionHistory from './pages/TransactionHistory';
 
 // Protected Route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactElement; requireClient?: boolean; requireContractor?: boolean }> = ({ 
@@ -18,8 +23,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement; requireClient?: b
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -43,18 +48,47 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/contractors" element={<Contractors />} />
             
             <Route
               path="/client/dashboard"
               element={
                 <ProtectedRoute requireClient>
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/service-requests/new"
+              element={
+                <ProtectedRoute requireClient>
+                  <NewServiceRequest />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/wallet/deposit"
+              element={
+                <ProtectedRoute requireClient>
+                  <WalletDeposit />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/wallet/transactions"
+              element={
+                <ProtectedRoute>
+                  <TransactionHistory />
                 </ProtectedRoute>
               }
             />
