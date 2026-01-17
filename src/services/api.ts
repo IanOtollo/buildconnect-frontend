@@ -3,7 +3,6 @@ import type {
   LoginData,
   LoginResponse,
   RegisterClientData,
-  RegisterContractorData,
   ServiceCategory,
   ServiceRequest,
   ContractorProfile,

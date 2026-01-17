@@ -168,9 +168,9 @@ const Landing: React.FC = () => {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
+                <li><a href="/about" className="hover:text-white transition">About Us</a></li>
+<li><a href="/contact" className="hover:text-white transition">Contact</a></li>
+<li><a href="/privacy" className="hover:text-white transition">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
