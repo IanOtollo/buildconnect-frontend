@@ -24,7 +24,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token'); // Changed from 'access_token' to 'token'
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,33 +33,15 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle token refresh
+// Response interceptor - simplified for PHP backend
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
-            refresh: refreshToken,
-          });
-          const { access } = response.data;
-          localStorage.setItem('access_token', access);
-          originalRequest.headers.Authorization = `Bearer ${access}`;
-          return apiClient(originalRequest);
-        }
-      } catch (refreshError) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+    if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -68,40 +50,70 @@ apiClient.interceptors.response.use(
 // Authentication APIs
 export const authAPI = {
   login: async (data: LoginData): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login/', data);
+    const response = await apiClient.post<LoginResponse>('/auth/login.php', data);
+    // Store token from PHP backend
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout/');
+    // PHP backend doesn't need logout endpoint, just clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   },
 
   registerClient: async (data: RegisterClientData): Promise<any> => {
-    const response = await apiClient.post('/auth/register/client/', data);
+    const response = await apiClient.post('/auth/register.php', {
+      ...data,
+      role: 'client'
+    });
+    // Store token from registration
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
     return response.data;
   },
 
   registerContractor: async (data: FormData): Promise<any> => {
-    const response = await apiClient.post('/auth/register/contractor/', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    // Convert FormData to JSON for PHP backend
+    const jsonData: any = {
+      role: 'contractor'
+    };
+    
+    data.forEach((value, key) => {
+      jsonData[key] = value;
     });
+
+    const response = await apiClient.post('/auth/register.php', jsonData);
+    
+    // Store token from registration
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   },
 
   passwordReset: async (email: string): Promise<void> => {
-    await apiClient.post('/auth/password-reset/', { email });
+    // Not implemented in PHP backend yet
+    throw new Error('Password reset not implemented');
   },
 };
 
 // Service Categories APIs
 export const categoriesAPI = {
   getAll: async (): Promise<ServiceCategory[]> => {
-    const response = await apiClient.get<ServiceCategory[]>('/categories/');
-    return response.data;
+    const response = await apiClient.get('/categories/list.php');
+    return response.data.categories || [];
   },
 
   getById: async (id: number): Promise<ServiceCategory> => {
-    const response = await apiClient.get<ServiceCategory>(`/categories/${id}/`);
+    const response = await apiClient.get(`/categories/list.php?id=${id}`);
     return response.data;
   },
 };
@@ -109,140 +121,136 @@ export const categoriesAPI = {
 // Service Requests APIs
 export const serviceRequestsAPI = {
   create: async (data: Partial<ServiceRequest>): Promise<ServiceRequest> => {
-    const response = await apiClient.post<ServiceRequest>('/service-requests/', data);
+    const response = await apiClient.post<ServiceRequest>('/requests/create.php', data);
     return response.data;
   },
 
   getAll: async (): Promise<ServiceRequest[]> => {
-    const response = await apiClient.get<ServiceRequest[]>('/service-requests/');
-    return response.data;
+    const response = await apiClient.get('/requests/list.php');
+    return response.data.requests || [];
   },
 
   getById: async (id: number): Promise<ServiceRequest> => {
-    const response = await apiClient.get<ServiceRequest>(`/service-requests/${id}/`);
+    const response = await apiClient.get(`/requests/list.php?id=${id}`);
     return response.data;
   },
 
   confirmPayment: async (id: number): Promise<ServiceRequest> => {
-    const response = await apiClient.post<ServiceRequest>(`/service-requests/${id}/confirm-payment/`);
-    return response.data;
+    // Not implemented in current PHP backend
+    throw new Error('Payment confirmation not implemented');
   },
 
   confirmCompletion: async (id: number): Promise<ServiceRequest> => {
-    const response = await apiClient.post<ServiceRequest>(`/service-requests/${id}/confirm-completion/`);
-    return response.data;
+    // Not implemented in current PHP backend
+    throw new Error('Completion confirmation not implemented');
   },
 
   cancel: async (id: number): Promise<void> => {
-    await apiClient.post(`/service-requests/${id}/cancel/`);
+    // Not implemented in current PHP backend
+    throw new Error('Cancel not implemented');
   },
 };
 
 // Contractors APIs
 export const contractorsAPI = {
   getAll: async (): Promise<ContractorProfile[]> => {
-    const response = await apiClient.get<ContractorProfile[]>('/contractors/');
-    return response.data;
+    const response = await apiClient.get('/contractors/list.php');
+    return response.data.contractors || [];
   },
 
   getById: async (id: number): Promise<ContractorProfile> => {
-    const response = await apiClient.get<ContractorProfile>(`/contractors/${id}/`);
+    const response = await apiClient.get(`/contractors/profile.php?id=${id}`);
     return response.data;
   },
 
   getMe: async (): Promise<ContractorProfile> => {
-    const response = await apiClient.get<ContractorProfile>('/contractors/me/');
+    // Get current user from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const response = await apiClient.get(`/contractors/profile.php?id=${user.id}`);
     return response.data;
   },
 
   updateAvailability: async (is_available: boolean): Promise<void> => {
-    await apiClient.patch('/contractors/update_availability/', { is_available });
+    // Not implemented in current PHP backend
+    throw new Error('Update availability not implemented');
   },
 
   getVerificationStatus: async (): Promise<any> => {
-    const response = await apiClient.get('/contractors/verification_status/');
-    return response.data;
+    // Not implemented in current PHP backend
+    throw new Error('Verification status not implemented');
   },
 };
 
-// Assignments APIs
+// Assignments APIs - Not implemented in PHP backend
 export const assignmentsAPI = {
   getPending: async (): Promise<Assignment[]> => {
-    const response = await apiClient.get<Assignment[]>('/assignments/pending/');
-    return response.data;
+    const response = await apiClient.get('/requests/list.php');
+    return response.data.requests || [];
   },
 
   accept: async (assignmentId: number): Promise<Assignment> => {
-    const response = await apiClient.post<Assignment>('/assignments/accept/', { assignment_id: assignmentId });
+    const response = await apiClient.post('/requests/respond.php', {
+      request_id: assignmentId,
+      action: 'accept'
+    });
     return response.data;
   },
 
   decline: async (assignmentId: number): Promise<void> => {
-    await apiClient.post('/assignments/decline/', { assignment_id: assignmentId });
+    await apiClient.post('/requests/respond.php', {
+      request_id: assignmentId,
+      action: 'reject'
+    });
   },
 
   start: async (assignmentId: number): Promise<Assignment> => {
-    const response = await apiClient.post<Assignment>(`/assignments/${assignmentId}/start/`);
-    return response.data;
+    throw new Error('Start assignment not implemented');
   },
 
   complete: async (assignmentId: number, notes: string): Promise<Assignment> => {
-    const response = await apiClient.post<Assignment>('/assignments/complete/', {
-      assignment_id: assignmentId,
-      completion_notes: notes,
-    });
-    return response.data;
+    throw new Error('Complete assignment not implemented');
   },
 };
 
-// Wallet APIs
+// Wallet APIs - Not implemented in PHP backend
 export const walletAPI = {
   getBalance: async (): Promise<WalletBalance> => {
-    const response = await apiClient.get<WalletBalance>('/wallet/balance/');
-    return response.data;
+    throw new Error('Wallet not implemented');
   },
 
   getTransactions: async (): Promise<Transaction[]> => {
-    const response = await apiClient.get<Transaction[]>('/wallet/transactions/');
-    return response.data;
+    throw new Error('Transactions not implemented');
   },
 
   depositMpesa: async (amount: number, phone: string): Promise<any> => {
-    const response = await apiClient.post('/wallet/deposit/mpesa/', { amount, phone_number: phone });
-    return response.data;
+    throw new Error('M-Pesa deposit not implemented');
   },
 
   withdrawMpesa: async (amount: number, phone: string): Promise<any> => {
-    const response = await apiClient.post('/wallet/withdraw/mpesa/', { amount, phone_number: phone });
-    return response.data;
+    throw new Error('M-Pesa withdraw not implemented');
   },
 
   payDeposit: async (serviceRequestId: number): Promise<any> => {
-    const response = await apiClient.post('/wallet/pay-deposit/', { service_request_id: serviceRequestId });
-    return response.data;
+    throw new Error('Pay deposit not implemented');
   },
 
   getEscrow: async (): Promise<Transaction[]> => {
-    const response = await apiClient.get<Transaction[]>('/wallet/escrow/');
-    return response.data;
+    throw new Error('Escrow not implemented');
   },
 };
 
-// Reviews APIs
+// Reviews APIs - Not implemented in PHP backend
 export const reviewsAPI = {
   create: async (data: Partial<Review>): Promise<Review> => {
-    const response = await apiClient.post<Review>('/reviews/', data);
-    return response.data;
+    throw new Error('Reviews not implemented');
   },
 
   getAll: async (): Promise<Review[]> => {
-    const response = await apiClient.get<Review[]>('/reviews/');
-    return response.data;
+    return [];
   },
 
   getContractorReviews: async (contractorId: number): Promise<Review[]> => {
-    const response = await apiClient.get<Review[]>(`/reviews/contractor/${contractorId}/`);
-    return response.data;
+    return [];
   },
 };
 
