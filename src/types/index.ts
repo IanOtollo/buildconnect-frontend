@@ -4,15 +4,16 @@ export interface User {
   email: string;
   full_name: string;
   phone: string;
-  is_contractor: boolean;
-  is_client: boolean;
-  is_active: boolean;
-  date_joined: string;
+  role: 'client' | 'contractor' | 'admin';
+  is_contractor?: boolean;
+  is_client?: boolean;
+  is_active?: boolean;
+  date_joined?: string;
 }
 
 export interface LoginResponse {
-  access: string;
-  refresh: string;
+  message: string;
+  token: string;
   user: User;
 }
 
@@ -26,15 +27,28 @@ export interface ContractorProfile extends User {
   business_name: string;
   bio: string;
   years_of_experience: number;
-  hourly_rate: number;
-  is_verified: boolean;
-  verification_status: 'pending' | 'approved' | 'rejected' | 'under_review';
+  hourly_rate?: number;
+  is_verified?: boolean;
+  verification_status?: 'pending' | 'approved' | 'rejected' | 'under_review';
   is_available: boolean;
-  rating: number;
-  total_jobs_completed: number;
+  rating?: number;
+  total_jobs_completed?: number;
   profile_image?: string;
   location: string;
-  skills: Skill[];
+  category: string;
+  skills?: Skill[];
+  status?: 'pending' | 'approved' | 'rejected';
+  completed_jobs?: number;
+  portfolio?: PortfolioItem[];
+}
+
+export interface PortfolioItem {
+  id: number;
+  contractor_id: number;
+  title: string;
+  description: string;
+  image_path: string;
+  created_at: string;
 }
 
 export interface Skill {
@@ -47,24 +61,36 @@ export interface ServiceCategory {
   name: string;
   description: string;
   icon?: string;
-  is_active: boolean;
+  is_active?: boolean;
+  contractor_count?: number;
+  created_at?: string;
 }
 
 export interface ServiceRequest {
   id: number;
-  client: number;
-  category: ServiceCategory;
+  client_id: number;
+  contractor_id?: number;
+  category: string;
   title: string;
   description: string;
   location: string;
-  budget: number;
-  estimated_duration: string;
-  urgency: 'low' | 'medium' | 'high';
-  status: 'pending_deposit' | 'pending_assignment' | 'assigned' | 'in_progress' | 'pending_completion' | 'completed' | 'cancelled';
-  deposit_amount: number;
-  deposit_paid: boolean;
+  budget?: number;
+  estimated_duration?: string;
+  urgency?: 'low' | 'medium' | 'high';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  deposit_amount?: number;
+  deposit_paid?: boolean;
+  file_path?: string;
   created_at: string;
   updated_at: string;
+  // Additional fields from PHP backend
+  client_name?: string;
+  client_phone?: string;
+  client_email?: string;
+  contractor_name?: string;
+  contractor_phone?: string;
+  contractor_email?: string;
+  business_name?: string;
 }
 
 export interface Assignment {
@@ -83,8 +109,8 @@ export interface WalletBalance {
   available_balance: number;
   locked_balance: number;
   total_balance: number;
-  daily_withdrawal_limit: number;
-  remaining_daily_limit: number;
+  daily_withdrawal_limit?: number;
+  remaining_daily_limit?: number;
 }
 
 export interface Transaction {
@@ -103,10 +129,10 @@ export interface Review {
   contractor: number;
   client: number;
   rating: number;
-  professionalism_rating: number;
-  quality_rating: number;
-  timeliness_rating: number;
-  communication_rating: number;
+  professionalism_rating?: number;
+  quality_rating?: number;
+  timeliness_rating?: number;
+  communication_rating?: number;
   comment: string;
   created_at: string;
 }
@@ -127,15 +153,26 @@ export interface RegisterContractorData {
   phone: string;
   business_name: string;
   bio: string;
-  years_of_experience: number;
-  hourly_rate: number;
+  category: string;
   location: string;
-  id_document: File;
-  kra_pin_document: File;
+  years_of_experience: number;
+  hourly_rate?: number;
+  id_document?: File;
+  kra_pin_document?: File;
   work_permit_document?: File;
 }
 
 export interface LoginData {
   email: string;
   password: string;
+}
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  title: string;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
 }
