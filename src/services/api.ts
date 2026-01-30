@@ -24,7 +24,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Changed from 'access_token' to 'token'
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,12 +33,11 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - simplified for PHP backend
+// Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Clear auth data and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -51,7 +50,6 @@ apiClient.interceptors.response.use(
 export const authAPI = {
   login: async (data: LoginData): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/auth/login.php', data);
-    // Store token from PHP backend
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -60,7 +58,6 @@ export const authAPI = {
   },
 
   logout: async (): Promise<void> => {
-    // PHP backend doesn't need logout endpoint, just clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
@@ -70,7 +67,6 @@ export const authAPI = {
       ...data,
       role: 'client'
     });
-    // Store token from registration
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -78,19 +74,13 @@ export const authAPI = {
     return response.data;
   },
 
-  registerContractor: async (data: FormData): Promise<any> => {
-    // Convert FormData to JSON for PHP backend
-    const jsonData: any = {
+  registerContractor: async (data: any): Promise<any> => {
+    // Send contractor data as JSON (not FormData)
+    const response = await apiClient.post('/auth/register.php', {
+      ...data,
       role: 'contractor'
-    };
-    
-    data.forEach((value, key) => {
-      jsonData[key] = value;
     });
-
-    const response = await apiClient.post('/auth/register.php', jsonData);
     
-    // Store token from registration
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -100,7 +90,6 @@ export const authAPI = {
   },
 
   passwordReset: async (email: string): Promise<void> => {
-    // Not implemented in PHP backend yet
     throw new Error('Password reset not implemented');
   },
 };
@@ -136,17 +125,14 @@ export const serviceRequestsAPI = {
   },
 
   confirmPayment: async (id: number): Promise<ServiceRequest> => {
-    // Not implemented in current PHP backend
     throw new Error('Payment confirmation not implemented');
   },
 
   confirmCompletion: async (id: number): Promise<ServiceRequest> => {
-    // Not implemented in current PHP backend
     throw new Error('Completion confirmation not implemented');
   },
 
   cancel: async (id: number): Promise<void> => {
-    // Not implemented in current PHP backend
     throw new Error('Cancel not implemented');
   },
 };
@@ -164,24 +150,21 @@ export const contractorsAPI = {
   },
 
   getMe: async (): Promise<ContractorProfile> => {
-    // Get current user from localStorage
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const response = await apiClient.get(`/contractors/profile.php?id=${user.id}`);
     return response.data;
   },
 
   updateAvailability: async (is_available: boolean): Promise<void> => {
-    // Not implemented in current PHP backend
     throw new Error('Update availability not implemented');
   },
 
   getVerificationStatus: async (): Promise<any> => {
-    // Not implemented in current PHP backend
     throw new Error('Verification status not implemented');
   },
 };
 
-// Assignments APIs - Not implemented in PHP backend
+// Assignments APIs
 export const assignmentsAPI = {
   getPending: async (): Promise<Assignment[]> => {
     const response = await apiClient.get('/requests/list.php');
@@ -212,7 +195,7 @@ export const assignmentsAPI = {
   },
 };
 
-// Wallet APIs - Not implemented in PHP backend
+// Wallet APIs - Not implemented
 export const walletAPI = {
   getBalance: async (): Promise<WalletBalance> => {
     throw new Error('Wallet not implemented');
@@ -239,7 +222,7 @@ export const walletAPI = {
   },
 };
 
-// Reviews APIs - Not implemented in PHP backend
+// Reviews APIs - Not implemented
 export const reviewsAPI = {
   create: async (data: Partial<Review>): Promise<Review> => {
     throw new Error('Reviews not implemented');
