@@ -12,4 +12,23 @@ const getErrorMessage = (error) => {
   return error.message;
 };
 
+// Group all auth-related API calls here
+export const authAPI = {
+  login: (credentials: { email: string; password: string }) =>
+    api.post('/auth/login', credentials),
+
+  register: (userData: { 
+    name: string; 
+    email: string; 
+    password: string; 
+    role?: 'client' | 'contractor' 
+  }) => api.post('/auth/register', userData),
+
+  logout: () => api.post('/auth/logout'),
+
+  refreshToken: () => api.post('/auth/refresh'),
+
+  // Add more auth endpoints as needed (e.g., forgotPassword, verifyEmail, etc.)
+};
+
 export { api, getErrorMessage };
