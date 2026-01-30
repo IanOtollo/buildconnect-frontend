@@ -12,11 +12,19 @@ const getErrorMessage = (error) => {
   return error.message;
 };
 
+// ── Add this block ────────────────────────────────────────────────
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  logout: () => api.post('/auth/logout'),
-  refresh: () => api.post('/auth/refresh'),
+  login: (data: { email: string; password: string }) => 
+    api.post('/auth/login', data),
+
+  logout: () => 
+    api.post('/auth/logout'),
+
+  // Optional: If your backend has these, add them later
+  // register: (data) => api.post('/auth/register', data),
+  // refresh: () => api.post('/auth/refresh'),
+  // me: () => api.get('/auth/me'),   // to fetch current user on load
 };
+// ───────────────────────────────────────────────────────────────────
 
 export { api, getErrorMessage };
