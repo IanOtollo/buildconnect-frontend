@@ -20,7 +20,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token');
 
     if (savedUser && token) {
       setUser(JSON.parse(savedUser));
@@ -30,8 +30,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (data: LoginData) => {
     const response = await authAPI.login(data);
-    localStorage.setItem('access_token', response.access);
-    localStorage.setItem('refresh_token', response.refresh);
+    // PHP backend returns 'token' not 'access' and 'refresh'
+    localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
     setUser(response.user);
   };
@@ -42,8 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     }
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   };
@@ -54,8 +53,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isLoading,
     login,
     logout,
-    isClient: user?.is_client || false,
-    isContractor: user?.is_contractor || false,
+    isClient: user?.role === 'client',
+    isContractor: user?.role === 'contractor',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
