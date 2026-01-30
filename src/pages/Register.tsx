@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authAPI, categoriesAPI } from '../services/api';
 import Input from '../components/Input';
 import Button from '../components/Button';
 
@@ -11,6 +11,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
   const navigate = useNavigate();
 
   const [clientData, setClientData] = useState({
@@ -32,6 +33,7 @@ const Register: React.FC = () => {
     years_of_experience: '',
     hourly_rate: '',
     location: '',
+    category: '', // Added category field
   });
 
   const [documents, setDocuments] = useState({
@@ -40,6 +42,19 @@ const Register: React.FC = () => {
     work_permit_document: null as File | null,
   });
 
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoriesAPI.getAll();
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, []);
+
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -47,10 +62,10 @@ const Register: React.FC = () => {
 
     try {
       await authAPI.registerClient(clientData);
-      setSuccess('Registration successful! Please check your email to verify your account.');
-      setTimeout(() => navigate('/login'), 3000);
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -59,30 +74,35 @@ const Register: React.FC = () => {
   const handleContractorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setLoading(false);
 
-    if (!documents.id_document || !documents.kra_pin_document) {
-      setError('ID and KRA PIN documents are required');
-      setLoading(false);
+    // Validate category selection
+    if (!contractorData.category) {
+      setError('Please select a service category');
       return;
     }
 
-    try {
-      const formData = new FormData();
-      Object.entries(contractorData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      formData.append('id_document', documents.id_document);
-      formData.append('kra_pin_document', documents.kra_pin_document);
-      if (documents.work_permit_document) {
-        formData.append('work_permit_document', documents.work_permit_document);
-      }
+    // Validate required documents
+    if (!documents.id_document || !documents.kra_pin_document) {
+      setError('ID and KRA PIN documents are required');
+      return;
+    }
 
-      await authAPI.registerContractor(formData);
-      setSuccess('Application submitted! Our AI system is verifying your documents. You will receive an email with the results.');
-      setTimeout(() => navigate('/login'), 5000);
+    setLoading(true);
+
+    try {
+      // First register the contractor without files
+      const registrationData = {
+        ...contractorData,
+        years_of_experience: parseInt(contractorData.years_of_experience) || 0,
+      };
+
+      const response = await authAPI.registerContractor(registrationData);
+      
+      setSuccess('Application submitted! Your documents will be reviewed. Redirecting to login...');
+      setTimeout(() => navigate('/login'), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Application failed');
+      setError(err.response?.data?.error || 'Application failed');
     } finally {
       setLoading(false);
     }
@@ -168,7 +188,7 @@ const Register: React.FC = () => {
               value={clientData.password}
               onChange={(e) => setClientData({ ...clientData, password: e.target.value })}
               required
-              helperText="Minimum 8 characters"
+              helperText="Minimum 6 characters"
             />
             <Input
               type="text"
@@ -215,6 +235,7 @@ const Register: React.FC = () => {
               value={contractorData.password}
               onChange={(e) => setContractorData({ ...contractorData, password: e.target.value })}
               required
+              helperText="Minimum 6 characters"
             />
             <Input
               type="text"
@@ -223,6 +244,27 @@ const Register: React.FC = () => {
               onChange={(e) => setContractorData({ ...contractorData, business_name: e.target.value })}
               required
             />
+
+            {/* Category Dropdown - ADDED */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:border-primary-500 focus:ring-primary-500"
+                value={contractorData.category}
+                onChange={(e) => setContractorData({ ...contractorData, category: e.target.value })}
+                required
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Bio
@@ -263,10 +305,13 @@ const Register: React.FC = () => {
             
             <div className="border-t pt-4 mt-4">
               <h3 className="font-semibold mb-4">Required Documents</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Documents will be uploaded after registration. Please have your ID and KRA PIN ready.
+              </p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ID Document
+                    ID Document <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="file"
@@ -278,7 +323,7 @@ const Register: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    KRA PIN Document
+                    KRA PIN Document <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="file"
