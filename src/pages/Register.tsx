@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI, categoriesAPI } from '../services/api';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import {
+  FiUser,
+  FiBriefcase,
+  FiMail,
+  FiLock,
+  FiPhone,
+  FiMapPin,
+  FiUpload,
+  FiAward,
+  FiDollarSign,
+  FiArrowRight,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiShield
+} from 'react-icons/fi';
 
 type UserType = 'client' | 'contractor';
 
@@ -33,7 +46,7 @@ const Register: React.FC = () => {
     years_of_experience: '',
     hourly_rate: '',
     location: '',
-    category: '', // Added category field
+    category: '',
   });
 
   const [documents, setDocuments] = useState({
@@ -42,12 +55,11 @@ const Register: React.FC = () => {
     work_permit_document: null as File | null,
   });
 
-  // Load categories on mount
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const data = await categoriesAPI.getAll();
-        setCategories(data);
+        const response = await categoriesAPI.getAll();
+        setCategories(response.data);
       } catch (err) {
         console.error('Failed to load categories:', err);
       }
@@ -62,10 +74,10 @@ const Register: React.FC = () => {
 
     try {
       await authAPI.registerClient(clientData);
-      setSuccess('Registration successful! Redirecting to login...');
+      setSuccess('Registration successful! Welcome to BuildConnect.');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.response?.data?.error || 'Registration failed. Please check your details.');
     } finally {
       setLoading(false);
     }
@@ -74,35 +86,32 @@ const Register: React.FC = () => {
   const handleContractorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(false);
 
-    // Validate category selection
     if (!contractorData.category) {
       setError('Please select a service category');
       return;
     }
 
-    // Validate required documents
     if (!documents.id_document || !documents.kra_pin_document) {
-      setError('ID and KRA PIN documents are required');
+      setError('ID and KRA PIN documents are required for verification');
       return;
     }
 
     setLoading(true);
 
     try {
-      // First register the contractor without files
-      const registrationData = {
-        ...contractorData,
-        years_of_experience: parseInt(contractorData.years_of_experience) || 0,
-      };
+      const formData = new FormData();
+      Object.entries(contractorData).forEach(([key, value]) => formData.append(key, value));
+      if (documents.id_document) formData.append('id_document', documents.id_document);
+      if (documents.kra_pin_document) formData.append('kra_pin_document', documents.kra_pin_document);
+      if (documents.work_permit_document) formData.append('work_permit_document', documents.work_permit_document);
 
-      const response = await authAPI.registerContractor(registrationData);
-      
-      setSuccess('Application submitted! Your documents will be reviewed. Redirecting to login...');
+      await authAPI.registerContractor(formData);
+
+      setSuccess('Application submitted! Our team will review your credentials shortly.');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Application failed');
+      setError(err.response?.data?.error || 'Application failed. Please check your documents.');
     } finally {
       setLoading(false);
     }
@@ -115,249 +124,293 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-gray-600">Join BuildConnect today</p>
-        </div>
+    <div className="min-h-screen relative py-20 px-4 overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute inset-0 -z-10 bg-[#030712]">
+        <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-600/5 rounded-full blur-[120px]" />
+      </div>
 
-        {/* User Type Tabs */}
-        <div className="flex border-b mb-8">
-          <button
-            className={`flex-1 py-3 text-center font-medium transition ${
-              userType === 'client'
-                ? 'border-b-2 border-primary-600 text-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setUserType('client')}
-          >
-            Client
-          </button>
-          <button
-            className={`flex-1 py-3 text-center font-medium transition ${
-              userType === 'contractor'
-                ? 'border-b-2 border-primary-600 text-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setUserType('contractor')}
-          >
-            Contractor
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+      <div className="max-w-2xl mx-auto relative">
+        <div className="glass-card overflow-hidden">
+          {/* Header */}
+          <div className="p-8 md:p-10 text-center border-b border-white/5">
+            <h2 className="text-4xl font-black text-white mb-2 tracking-tight">Create Account</h2>
+            <p className="text-gray-400">Join the future of construction management</p>
           </div>
-        )}
 
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">{success}</p>
+          {/* Type Selector */}
+          <div className="flex p-2 bg-white/5 mx-8 md:mx-10 mt-8 rounded-2xl gap-2">
+            <button
+              onClick={() => setUserType('client')}
+              className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all ${userType === 'client'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <FiUser className="text-xl" />
+              I'm a Client
+            </button>
+            <button
+              onClick={() => setUserType('contractor')}
+              className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all ${userType === 'contractor'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+            >
+              <FiBriefcase className="text-xl" />
+              I'm a Contractor
+            </button>
           </div>
-        )}
 
-        {userType === 'client' ? (
-          <form onSubmit={handleClientSubmit} className="space-y-4">
-            <Input
-              type="text"
-              label="Full Name"
-              value={clientData.full_name}
-              onChange={(e) => setClientData({ ...clientData, full_name: e.target.value })}
-              required
-            />
-            <Input
-              type="email"
-              label="Email Address"
-              value={clientData.email}
-              onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
-              required
-            />
-            <Input
-              type="tel"
-              label="Phone Number"
-              value={clientData.phone}
-              onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
-              required
-              placeholder="0712345678"
-            />
-            <Input
-              type="password"
-              label="Password"
-              value={clientData.password}
-              onChange={(e) => setClientData({ ...clientData, password: e.target.value })}
-              required
-              helperText="Minimum 6 characters"
-            />
-            <Input
-              type="text"
-              label="Address (Optional)"
-              value={clientData.address}
-              onChange={(e) => setClientData({ ...clientData, address: e.target.value })}
-            />
-            <Input
-              type="text"
-              label="City (Optional)"
-              value={clientData.city}
-              onChange={(e) => setClientData({ ...clientData, city: e.target.value })}
-            />
-            <Button type="submit" fullWidth loading={loading}>
-              Register as Client
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={handleContractorSubmit} className="space-y-4">
-            <Input
-              type="text"
-              label="Full Name"
-              value={contractorData.full_name}
-              onChange={(e) => setContractorData({ ...contractorData, full_name: e.target.value })}
-              required
-            />
-            <Input
-              type="email"
-              label="Email Address"
-              value={contractorData.email}
-              onChange={(e) => setContractorData({ ...contractorData, email: e.target.value })}
-              required
-            />
-            <Input
-              type="tel"
-              label="Phone Number"
-              value={contractorData.phone}
-              onChange={(e) => setContractorData({ ...contractorData, phone: e.target.value })}
-              required
-            />
-            <Input
-              type="password"
-              label="Password"
-              value={contractorData.password}
-              onChange={(e) => setContractorData({ ...contractorData, password: e.target.value })}
-              required
-              helperText="Minimum 6 characters"
-            />
-            <Input
-              type="text"
-              label="Business Name"
-              value={contractorData.business_name}
-              onChange={(e) => setContractorData({ ...contractorData, business_name: e.target.value })}
-              required
-            />
-
-            {/* Category Dropdown - ADDED */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Service Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:border-primary-500 focus:ring-primary-500"
-                value={contractorData.category}
-                onChange={(e) => setContractorData({ ...contractorData, category: e.target.value })}
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bio
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:border-primary-500 focus:ring-primary-500"
-                rows={3}
-                value={contractorData.bio}
-                onChange={(e) => setContractorData({ ...contractorData, bio: e.target.value })}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="number"
-                label="Years of Experience"
-                value={contractorData.years_of_experience}
-                onChange={(e) => setContractorData({ ...contractorData, years_of_experience: e.target.value })}
-                required
-                min="0"
-              />
-              <Input
-                type="number"
-                label="Hourly Rate (KES)"
-                value={contractorData.hourly_rate}
-                onChange={(e) => setContractorData({ ...contractorData, hourly_rate: e.target.value })}
-                required
-                min="0"
-              />
-            </div>
-            <Input
-              type="text"
-              label="Location"
-              value={contractorData.location}
-              onChange={(e) => setContractorData({ ...contractorData, location: e.target.value })}
-              required
-            />
-            
-            <div className="border-t pt-4 mt-4">
-              <h3 className="font-semibold mb-4">Required Documents</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Documents will be uploaded after registration. Please have your ID and KRA PIN ready.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ID Document <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, 'id_document')}
-                    required
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    KRA PIN Document <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, 'kra_pin_document')}
-                    required
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Work Permit (Optional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, 'work_permit_document')}
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                  />
-                </div>
+          <div className="p-8 md:p-10">
+            {error && (
+              <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+                <FiAlertCircle className="text-red-400 mt-1" />
+                <p className="text-red-200 text-sm">{error}</p>
               </div>
-            </div>
+            )}
 
-            <Button type="submit" fullWidth loading={loading}>
-              Submit Application
-            </Button>
-          </form>
-        )}
+            {success && (
+              <div className="mb-8 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
+                <FiCheckCircle className="text-emerald-400 mt-1" />
+                <p className="text-emerald-200 text-sm">{success}</p>
+              </div>
+            )}
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+            {userType === 'client' ? (
+              <form onSubmit={handleClientSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 ml-1">Full Name</label>
+                    <div className="relative">
+                      <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                      <input
+                        type="text"
+                        required
+                        value={clientData.full_name}
+                        onChange={(e) => setClientData({ ...clientData, full_name: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 ml-1">Phone Number</label>
+                    <div className="relative">
+                      <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                      <input
+                        type="tel"
+                        required
+                        value={clientData.phone}
+                        onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="0712 345 678"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300 ml-1">Email Address</label>
+                  <div className="relative">
+                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <input
+                      type="email"
+                      required
+                      value={clientData.email}
+                      onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
+                  <div className="relative">
+                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <input
+                      type="password"
+                      required
+                      value={clientData.password}
+                      onChange={(e) => setClientData({ ...clientData, password: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Complete Registration</span>
+                      <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleContractorSubmit} className="space-y-8">
+                {/* Section 1: Basic Info */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">1</span>
+                    Basic Information
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={contractorData.full_name}
+                        onChange={(e) => setContractorData({ ...contractorData, full_name: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Business Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={contractorData.business_name}
+                        onChange={(e) => setContractorData({ ...contractorData, business_name: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Expertise */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">2</span>
+                    Professional Expertise
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Category</label>
+                      <select
+                        required
+                        value={contractorData.category}
+                        onChange={(e) => setContractorData({ ...contractorData, category: e.target.value })}
+                        className="w-full bg-[#0d121f] border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Hourly Rate (KES)</label>
+                      <div className="relative">
+                        <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <input
+                          type="number"
+                          required
+                          value={contractorData.hourly_rate}
+                          onChange={(e) => setContractorData({ ...contractorData, hourly_rate: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 ml-1">Bio / About your services</label>
+                    <textarea
+                      rows={4}
+                      required
+                      value={contractorData.bio}
+                      onChange={(e) => setContractorData({ ...contractorData, bio: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      placeholder="Describe your skills and experience..."
+                    />
+                  </div>
+                </div>
+
+                {/* Section 3: Verification */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">3</span>
+                    Verification & Documents
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">ID Document (Front/Back)</label>
+                      <div className="relative group cursor-pointer">
+                        <input
+                          type="file"
+                          onChange={(e) => handleFileChange(e, 'id_document')}
+                          className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                        />
+                        <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
+                          <FiUpload className="mx-auto mb-2 text-blue-400 text-2xl" />
+                          <p className="text-xs text-gray-400">
+                            {documents.id_document ? documents.id_document.name : 'Upload National ID'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">KRA PIN Certificate</label>
+                      <div className="relative group cursor-pointer">
+                        <input
+                          type="file"
+                          onChange={(e) => handleFileChange(e, 'kra_pin_document')}
+                          className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                        />
+                        <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
+                          <FiShield className="mx-auto mb-2 text-purple-400 text-2xl" />
+                          <p className="text-xs text-gray-400">
+                            {documents.kra_pin_document ? documents.kra_pin_document.name : 'Upload KRA PIN'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/5 pt-8">
+                  <div className="flex items-center gap-4 mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <FiShield className="text-blue-400 text-xl flex-shrink-0" />
+                    <p className="text-xs text-blue-200">
+                      By submitting this application, you agree to our professional code of conduct and verification process.
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-4 rounded-xl font-bold text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span>Submit for Verification</span>
+                        <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-gray-400 text-sm">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
-              Login
+            <Link to="/login" className="text-white font-bold hover:text-blue-400 transition-colors">
+              Sign In
             </Link>
           </p>
         </div>

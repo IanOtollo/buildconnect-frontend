@@ -12,12 +12,13 @@ import Contractors from './pages/Contractors';
 import NewServiceRequest from './pages/NewServiceRequest';
 import WalletDeposit from './pages/WalletDeposit';
 import TransactionHistory from './pages/TransactionHistory';
+import AIEstimation from './pages/AIEstimation';
 
 // Protected Route wrapper
-const ProtectedRoute: React.FC<{ children: React.ReactElement; requireClient?: boolean; requireContractor?: boolean }> = ({ 
-  children, 
-  requireClient, 
-  requireContractor 
+const ProtectedRoute: React.FC<{ children: React.ReactElement; requireClient?: boolean; requireContractor?: boolean }> = ({
+  children,
+  requireClient,
+  requireContractor
 }) => {
   const { isAuthenticated, isClient, isContractor, isLoading } = useAuth();
 
@@ -56,7 +57,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/contractors" element={<Contractors />} />
-            
+            <Route path="/ai-estimate" element={<AIEstimation />} />
+
             <Route
               path="/client/dashboard"
               element={
@@ -92,7 +94,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
+
             <Route
               path="/contractor/dashboard"
               element={

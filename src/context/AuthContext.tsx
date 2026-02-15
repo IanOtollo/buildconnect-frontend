@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isClient: boolean;
   isContractor: boolean;
 }
@@ -30,10 +31,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (data: LoginData) => {
     const response = await authAPI.login(data);
-    // PHP backend returns 'token' not 'access' and 'refresh'
-    localStorage.setItem('token', response.token);
-    localStorage.setItem('user', JSON.stringify(response.user));
-    setUser(response.user);
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    setUser(response.data.user);
   };
 
   const logout = async () => {
@@ -47,12 +47,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.me();
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Refresh user error:', error);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    refreshUser,
     isClient: user?.role === 'client',
     isContractor: user?.role === 'contractor',
   };

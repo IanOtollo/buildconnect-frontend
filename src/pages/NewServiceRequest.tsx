@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { categoriesAPI, serviceRequestsAPI } from '../services/api';
+import { categoriesAPI, serviceRequestsAPI, getErrorMessage } from '../services/api';
 import type { ServiceCategory } from '../types';
+import { FiPlus, FiMapPin, FiClock, FiDollarSign, FiInfo, FiChevronRight, FiGrid, FiEdit3, FiZap, FiShield } from 'react-icons/fi';
 
 const NewServiceRequest: React.FC = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
@@ -25,8 +26,8 @@ const NewServiceRequest: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const data = await categoriesAPI.getAll();
-      setCategories(data);
+      const response = await categoriesAPI.getAll();
+      setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -50,179 +51,217 @@ const NewServiceRequest: React.FC = () => {
 
       navigate('/client/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create request');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
+  const urgencyLevels = [
+    { value: 'low', label: 'Standard', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+    { value: 'medium', label: 'Urgent', color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+    { value: 'high', label: 'Emergency', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Request a Service
-          </h1>
-          <p className="text-xl text-gray-600">
-            Describe your project and get matched with professional contractors
-          </p>
+    <div className="min-h-screen pt-32 pb-20 bg-[#030712]">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div>
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 mb-4">
+              <FiPlus className="text-primary-400 text-xs" />
+              <span className="text-primary-400 text-xs font-bold uppercase tracking-widest">New Project Listing</span>
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">Request a Service</h1>
+            <p className="text-gray-500 font-medium">Define your project details and find the perfect expert.</p>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="glass-card p-8">
+              {error && (
+                <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              >
-                <option value="">Select a category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FiGrid className="text-primary-500" /> Service Category
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      required
+                      className="glass-input w-full h-14 appearance-none"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FiEdit3 className="text-primary-500" /> Project Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                      placeholder="e.g. Modern Kitchen Design"
+                      className="glass-input w-full h-14"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <FiInfo className="text-primary-500" /> Project Description
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
+                    rows={5}
+                    placeholder="Provide a detailed description of the work required..."
+                    className="glass-input w-full py-4 resize-none"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FiMapPin className="text-primary-500" /> Location
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      required
+                      placeholder="e.g. Westlands, Nairobi"
+                      className="glass-input w-full h-14"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FiDollarSign className="text-primary-500" /> Estimated Budget (KES)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                      required
+                      placeholder="e.g. 150000"
+                      className="glass-input w-full h-14"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FiClock className="text-primary-500" /> Estimated Duration
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.estimated_duration}
+                      onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value })}
+                      required
+                      placeholder="e.g. 2 Weeks"
+                      className="glass-input w-full h-14"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+                      Priority Level
+                    </label>
+                    <div className="flex gap-2">
+                      {urgencyLevels.map((lvl) => (
+                        <button
+                          key={lvl.value}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, urgency: lvl.value as any })}
+                          className={`flex-1 h-14 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${formData.urgency === lvl.value
+                            ? `${lvl.color} shadow-lg`
+                            : 'bg-white/5 border-white/5 text-gray-500 hover:border-white/10'
+                            }`}
+                        >
+                          {lvl.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full h-16 text-lg"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Publishing Request...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span>Submit Project Request</span>
+                      <FiChevronRight className="text-xl" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="glass-card p-6 bg-gradient-to-br from-primary-500/5 to-transparent">
+              <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                <FiZap className="text-primary-500" />
+                BuildConnect Steps
+              </h3>
+              <div className="space-y-6">
+                {[
+                  { step: '01', title: 'Smart Matching', desc: 'Our AI analyzes your request and notifies top-rated experts.' },
+                  { step: '02', title: 'Compare Bids', desc: 'Receive competitive proposals and examine contractor profiles.' },
+                  { step: '03', title: 'Secure Escrow', desc: 'Pay the deposit via M-Pesa. Funds stay safe in escrow.' },
+                  { step: '04', title: 'Release Funds', desc: 'Release payments as milestones are verified and completed.' },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 group">
+                    <span className="text-xs font-black text-primary-500/40 group-hover:text-primary-500 transition-colors">{item.step}</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-white mb-1">{item.title}</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
                 ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Title
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-                placeholder="e.g., Kitchen Renovation"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
-                rows={4}
-                placeholder="Describe what you need in detail..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                required
-                placeholder="e.g., Nairobi, Westlands"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Budget (KES)
-                </label>
-                <input
-                  type="number"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  required
-                  min="0"
-                  placeholder="50000"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Estimated Duration
-                </label>
-                <input
-                  type="text"
-                  value={formData.estimated_duration}
-                  onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value })}
-                  required
-                  placeholder="e.g., 2 weeks"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Urgency Level
-              </label>
-              <div className="grid grid-cols-3 gap-4">
-                {['low', 'medium', 'high'].map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, urgency: level as any })}
-                    className={`py-3 px-4 rounded-lg font-medium transition-colors ${
-                      formData.urgency === level
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </button>
-                ))}
+            <div className="glass-card p-6 border-dashed border-white/10 text-center py-10">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <FiShield className="text-2xl text-emerald-400" />
               </div>
+              <h4 className="font-bold text-white mb-2">Verified Professional Only</h4>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Your project will only be visible to contractors who have passed our rigorous verification process.
+              </p>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gray-900 text-white py-4 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating Request...' : 'Create Service Request'}
-            </button>
-          </form>
-
-          <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">What happens next?</h4>
-            <ul className="space-y-2 text-gray-600 text-sm">
-              <li className="flex items-start">
-                <span className="font-medium mr-2">1.</span>
-                Our AI will estimate a fair price for your service
-              </li>
-              <li className="flex items-start">
-                <span className="font-medium mr-2">2.</span>
-                You'll need to pay a 20% deposit to confirm
-              </li>
-              <li className="flex items-start">
-                <span className="font-medium mr-2">3.</span>
-                We'll match you with verified contractors
-              </li>
-              <li className="flex items-start">
-                <span className="font-medium mr-2">4.</span>
-                Your funds are held safely in escrow until job completion
-              </li>
-            </ul>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default NewServiceRequest;
 
 export default NewServiceRequest;

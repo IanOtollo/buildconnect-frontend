@@ -1,75 +1,110 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout, isClient, isContractor } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <nav className="bg-white shadow-md">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-3' : 'py-5'
+      }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className={`glass-card px-6 py-3 flex justify-between items-center transition-all duration-500 ${isScrolled ? 'bg-gray-900/80' : 'bg-gray-900/40'
+          }`}>
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded"></div>
-              <span className="text-xl font-bold text-gray-900">BuildConnect</span>
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="relative w-10 h-10 flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary-500 rounded-xl rotate-6 group-hover:rotate-12 transition-transform duration-300"></div>
+                <div className="absolute inset-0 bg-white rounded-xl -rotate-6 group-hover:-rotate-12 transition-transform duration-300"></div>
+                <div className="relative z-10 bg-gray-900 rounded-lg w-8 h-8 flex items-center justify-center">
+                  <span className="text-primary-400 font-black text-xl">B</span>
+                </div>
+              </div>
+              <span className="text-2xl font-black tracking-tighter text-white group-hover:text-primary-400 transition-colors">
+                Build<span className="text-primary-500">Connect</span>
+              </span>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/categories" className={`nav-link ${isActive('/categories') ? 'text-white after:w-full' : ''}`}>
+              Services
+            </Link>
+            <Link to="/ai-estimate" className={`nav-link ${isActive('/ai-estimate') ? 'text-white after:w-full' : ''}`}>
+              AI Estimate
+            </Link>
+            <Link to="/contractors" className={`nav-link ${isActive('/contractors') ? 'text-white after:w-full' : ''}`}>
+              Contractors
+            </Link>
+
             {isAuthenticated ? (
               <>
-                <Link to="/categories" className="text-gray-700 hover:text-primary-600 transition">
-                  Services
-                </Link>
                 {isClient && (
-                  <Link to="/client/dashboard" className="text-gray-700 hover:text-primary-600 transition">
+                  <Link to="/client/dashboard" className={`nav-link ${isActive('/client/dashboard') ? 'text-white after:w-full' : ''}`}>
                     Dashboard
                   </Link>
                 )}
                 {isContractor && (
-                  <Link to="/contractor/dashboard" className="text-gray-700 hover:text-primary-600 transition">
+                  <Link to="/contractor/dashboard" className={`nav-link ${isActive('/contractor/dashboard') ? 'text-white after:w-full' : ''}`}>
                     Dashboard
                   </Link>
                 )}
-                <div className="flex items-center space-x-4">
-                  <span className="text-gray-700">{user?.full_name}</span>
+                <div className="flex items-center pl-4 border-l border-white/10 space-x-4">
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-semibold text-white">{user?.full_name}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-primary-500 font-bold">{user?.role}</span>
+                  </div>
                   <button
                     onClick={handleLogout}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition"
+                    className="btn-secondary !py-2 !px-4 !text-sm"
                   >
                     Logout
                   </button>
                 </div>
               </>
             ) : (
-              <>
-                <Link to="/categories" className="text-gray-700 hover:text-primary-600 transition">
-                  Services
-                </Link>
-                <Link to="/contractors" className="text-gray-700 hover:text-primary-600 transition">
-                  Find Contractors
-                </Link>
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-primary-600 transition"
+                  className="text-gray-400 hover:text-white font-semibold transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-md transition"
+                  className="btn-primary !py-2 !px-6"
                 >
                   Get Started
                 </Link>
-              </>
+              </div>
             )}
+          </div>
+
+          {/* Mobile Menu Button - Placeholder for mobile revamp */}
+          <div className="md:hidden flex items-center">
+            <button className="text-gray-400 hover:text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

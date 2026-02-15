@@ -5,6 +5,7 @@ export interface User {
   full_name: string;
   phone: string;
   role: 'client' | 'contractor' | 'admin';
+  wallet_balance?: number;
   is_contractor?: boolean;
   is_client?: boolean;
   is_active?: boolean;
