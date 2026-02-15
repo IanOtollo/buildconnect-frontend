@@ -110,7 +110,7 @@ const Contractors: React.FC = () => {
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
                     <div className="text-white font-black flex items-center justify-center gap-1">
-                      <FiStar className="text-yellow-500 text-xs" /> {contractor.rating.toFixed(1)}
+                      <FiStar className="text-yellow-500 text-xs" /> {contractor.rating?.toFixed(1) || '0.0'}
                     </div>
                     <div className="text-[9px] text-gray-500 font-bold uppercase mt-1">Rating</div>
                   </div>
@@ -125,7 +125,7 @@ const Contractors: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-8 h-12 overflow-hidden">
-                  {contractor.skills.slice(0, 3).map((skill) => (
+                  {contractor.skills?.slice(0, 3).map((skill) => (
                     <span
                       key={skill.id}
                       className="bg-primary-500/10 text-primary-400 text-[10px] px-2 py-1 rounded-lg font-bold border border-primary-500/20"
