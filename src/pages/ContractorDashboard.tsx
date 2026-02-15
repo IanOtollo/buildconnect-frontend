@@ -5,7 +5,6 @@ import type { ContractorProfile, Assignment, WalletBalance } from '../types';
 import {
   FiBriefcase,
   FiStar,
-  FiCheckCircle,
   FiClock,
   FiTrendingUp,
   FiMapPin,

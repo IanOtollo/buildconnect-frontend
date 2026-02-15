@@ -7,7 +7,6 @@ import {
   FiArrowRight,
   FiAlertCircle,
   FiCheckCircle,
-  FiActivity,
   FiShield
 } from 'react-icons/fi';
 
