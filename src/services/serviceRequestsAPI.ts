@@ -1,7 +1,7 @@
 import { api } from './api';
 
 export const serviceRequestsAPI = {
-    async fetchData(endpoint) {
+    async fetchData(endpoint: string) {
         try {
             const response = await api.get(endpoint);
             return response.data;
@@ -10,7 +10,7 @@ export const serviceRequestsAPI = {
             throw new Error('Failed to fetch data from service request API.');
         }
     },
-    async postData(endpoint, data) {
+    async postData(endpoint: string, data: any) {
         try {
             const response = await api.post(endpoint, data);
             return response.data;

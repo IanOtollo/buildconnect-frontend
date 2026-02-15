@@ -144,8 +144,8 @@ const Register: React.FC = () => {
             <button
               onClick={() => setUserType('client')}
               className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all ${userType === 'client'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
             >
               <FiUser className="text-xl" />
@@ -154,8 +154,8 @@ const Register: React.FC = () => {
             <button
               onClick={() => setUserType('contractor')}
               className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-bold transition-all ${userType === 'contractor'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
             >
               <FiBriefcase className="text-xl" />
@@ -352,7 +352,7 @@ const Register: React.FC = () => {
                           className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
                         />
                         <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
-                          <FiUpload className="mx-auto mb-2 text-blue-400 text-2xl" />
+                          {React.createElement(FiUpload as any, { className: "mx-auto mb-2 text-blue-400 text-2xl" })}
                           <p className="text-xs text-gray-400">
                             {documents.id_document ? documents.id_document.name : 'Upload National ID'}
                           </p>
@@ -368,7 +368,7 @@ const Register: React.FC = () => {
                           className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
                         />
                         <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
-                          <FiShield className="mx-auto mb-2 text-purple-400 text-2xl" />
+                          {React.createElement(FiShield as any, { className: "mx-auto mb-2 text-purple-400 text-2xl" })}
                           <p className="text-xs text-gray-400">
                             {documents.kra_pin_document ? documents.kra_pin_document.name : 'Upload KRA PIN'}
                           </p>
@@ -380,7 +380,7 @@ const Register: React.FC = () => {
 
                 <div className="border-t border-white/5 pt-8">
                   <div className="flex items-center gap-4 mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                    <FiShield className="text-blue-400 text-xl flex-shrink-0" />
+                    {React.createElement(FiShield as any, { className: "text-blue-400 text-xl flex-shrink-0" })}
                     <p className="text-xs text-blue-200">
                       By submitting this application, you agree to our professional code of conduct and verification process.
                     </p>
@@ -396,7 +396,7 @@ const Register: React.FC = () => {
                     ) : (
                       <>
                         <span>Submit for Verification</span>
-                        <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                        {React.createElement(FiArrowRight as any, { className: "group-hover:translate-x-1 transition-transform" })}
                       </>
                     )}
                   </button>

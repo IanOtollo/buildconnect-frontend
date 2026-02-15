@@ -4,7 +4,7 @@ import { serviceRequestsAPI, walletAPI } from '../services/api';
 import type { ServiceRequest, WalletBalance } from '../types';
 import {
   FiPlus,
-  FiWallet,
+  FiBriefcase,
   FiArrowUpRight,
   FiClock,
   FiCheckCircle,
@@ -12,7 +12,11 @@ import {
   FiBox,
   FiTrendingUp,
   FiChevronRight,
-  FiActivity
+  FiActivity,
+  FiUser,
+  FiXCircle,
+  FiMapPin,
+  FiShield
 } from 'react-icons/fi';
 
 const ClientDashboard: React.FC = () => {
@@ -41,7 +45,7 @@ const ClientDashboard: React.FC = () => {
 
   const getStatusInfo = (status: string) => {
     const statuses: Record<string, { label: string; color: string; icon: any }> = {
-      pending_deposit: { label: 'Deposit Required', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', icon: FiWallet },
+      pending_deposit: { label: 'Deposit Required', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', icon: FiBriefcase },
       pending_assignment: { label: 'Searching Experts', color: 'text-blue-400 bg-blue-400/10 border-blue-400/20', icon: FiActivity },
       assigned: { label: 'Assigned', color: 'text-purple-400 bg-purple-400/10 border-purple-400/20', icon: FiUser },
       in_progress: { label: 'In Progress', color: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20', icon: FiTrendingUp },
@@ -106,7 +110,7 @@ const ClientDashboard: React.FC = () => {
             <div className="flex items-center justify-between relative">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400">
-                  <FiWallet className="text-xl" />
+                  <FiBriefcase className="text-xl" />
                 </div>
                 <div>
                   <span className="text-gray-400 text-sm font-medium">Available Balance</span>
@@ -178,7 +182,7 @@ const ClientDashboard: React.FC = () => {
                             <div className="flex items-center gap-6">
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <FiTrendingUp className="text-blue-400/60" />
-                                Budget: <span className="text-gray-300 font-bold">KES {request.budget.toLocaleString()}</span>
+                                Budget: <span className="text-gray-300 font-bold">KES {request.budget?.toLocaleString() || '0'}</span>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <FiMapPin className="text-purple-400/60" />

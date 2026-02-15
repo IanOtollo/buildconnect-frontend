@@ -263,5 +263,3 @@ const NewServiceRequest: React.FC = () => {
 };
 
 export default NewServiceRequest;
-
-export default NewServiceRequest;

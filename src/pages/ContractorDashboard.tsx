@@ -8,7 +8,6 @@ import {
   FiCheckCircle,
   FiClock,
   FiTrendingUp,
-  FiWallet,
   FiMapPin,
   FiCheck,
   FiX,
@@ -82,7 +81,7 @@ const ContractorDashboard: React.FC = () => {
       under_review: { label: 'Under Review', color: 'text-blue-400 bg-blue-400/10 border-blue-400/20', icon: FiActivity },
       rejected: { label: 'Action Required', color: 'text-red-400 bg-red-400/10 border-red-400/20', icon: FiX },
     };
-    return statuses[profile.verification_status] || { label: profile.verification_status, color: 'text-gray-400 bg-gray-400/10 border-gray-400/20', icon: FiZap };
+    return (profile?.verification_status && statuses[profile.verification_status]) || { label: profile?.verification_status || 'Under Review', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20', icon: FiZap };
   };
 
   if (loading) {
@@ -118,8 +117,8 @@ const ContractorDashboard: React.FC = () => {
           <button
             onClick={toggleAvailability}
             className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${profile?.is_available
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5'
-                : 'bg-white/5 text-gray-400 border border-white/10 shadow-none'
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5'
+              : 'bg-white/5 text-gray-400 border border-white/10 shadow-none'
               } group`}
           >
             <div className={`w-2 h-2 rounded-full ${profile?.is_available ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
@@ -136,7 +135,7 @@ const ContractorDashboard: React.FC = () => {
               </div>
               <span className="text-gray-400 text-sm font-medium">Performance Rating</span>
             </div>
-            <p className="text-3xl font-black text-white">{profile?.rating.toFixed(1)} <span className="text-xs text-gray-500 font-normal">/ 5.0</span></p>
+            <p className="text-3xl font-black text-white">{profile?.rating?.toFixed(1) || '0.0'} <span className="text-xs text-gray-500 font-normal">/ 5.0</span></p>
           </div>
 
           <div className="glass-card p-6">
@@ -154,12 +153,12 @@ const ContractorDashboard: React.FC = () => {
             <div className="flex items-center justify-between relative">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-                  <FiWallet className="text-xl" />
+                  <FiBriefcase className="text-xl" />
                 </div>
                 <div>
                   <span className="text-gray-400 text-sm font-medium">Withdrawable Income</span>
                   <p className="text-3xl font-black text-white">
-                    KES {wallet?.available_balance.toLocaleString() || '0'}
+                    KES {wallet?.available_balance?.toLocaleString() || '0'}
                   </p>
                 </div>
               </div>
@@ -202,7 +201,7 @@ const ContractorDashboard: React.FC = () => {
                             {assignment.service_request.title}
                           </h3>
                           <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/5 text-gray-400 font-bold uppercase tracking-wider border border-white/10">
-                            {assignment.service_request.category.name}
+                            {typeof assignment.service_request.category === 'object' ? (assignment.service_request.category as any).name : assignment.service_request.category}
                           </span>
                         </div>
                         <p className="text-gray-400 text-sm mb-4 leading-relaxed line-clamp-2">
@@ -211,7 +210,7 @@ const ContractorDashboard: React.FC = () => {
                         <div className="flex flex-wrap items-center gap-6">
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FiTrendingUp className="text-emerald-400/60" />
-                            Job Budget: <span className="text-gray-200 font-bold">KES {assignment.service_request.budget.toLocaleString()}</span>
+                            Job Budget: <span className="text-gray-200 font-bold">KES {assignment.service_request.budget?.toLocaleString() || '0'}</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FiMapPin className="text-purple-400/60" />
