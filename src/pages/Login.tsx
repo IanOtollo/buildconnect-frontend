@@ -42,7 +42,9 @@ const Login: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+      console.error('Login error details:', err.response?.data);
+      const serverError = err.response?.data?.error || err.response?.data?.message || 'Invalid credentials. Please try again.';
+      setError(serverError);
     } finally {
       setLoading(false);
     }
