@@ -13,37 +13,49 @@ import NewServiceRequest from './pages/NewServiceRequest';
 import WalletDeposit from './pages/WalletDeposit';
 import TransactionHistory from './pages/TransactionHistory';
 import AIEstimation from './pages/AIEstimation';
+import AdminDashboard from './pages/AdminDashboard';
+
 
 // Protected Route wrapper
-const ProtectedRoute: React.FC<{ children: React.ReactElement; requireClient?: boolean; requireContractor?: boolean }> = ({
+const ProtectedRoute: React.FC<{
+  children: React.ReactElement;
+  requireClient?: boolean;
+  requireContractor?: boolean;
+  requireAdmin?: boolean;
+}> = ({
   children,
   requireClient,
-  requireContractor
+  requireContractor,
+  requireAdmin
 }) => {
-  const { isAuthenticated, isClient, isContractor, isLoading } = useAuth();
+    const { isAuthenticated, isClient, isContractor, isAdmin, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        </div>
+      );
+    }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
 
-  if (requireClient && !isClient) {
-    return <Navigate to="/" />;
-  }
+    if (requireClient && !isClient) {
+      return <Navigate to="/" />;
+    }
 
-  if (requireContractor && !isContractor) {
-    return <Navigate to="/" />;
-  }
+    if (requireContractor && !isContractor) {
+      return <Navigate to="/" />;
+    }
 
-  return children;
-};
+    if (requireAdmin && !isAdmin) {
+      return <Navigate to="/" />;
+    }
+
+    return children;
+  };
 
 function App() {
   return (
@@ -100,6 +112,15 @@ function App() {
               element={
                 <ProtectedRoute requireContractor>
                   <ContractorDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />

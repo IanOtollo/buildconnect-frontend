@@ -11,6 +11,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   isClient: boolean;
   isContractor: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     refreshUser,
     isClient: user?.role === 'client',
     isContractor: user?.role === 'contractor',
+    isAdmin: user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
