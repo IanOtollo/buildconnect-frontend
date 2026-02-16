@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FiUsers, FiBriefcase, FiActivity, FiShield, FiCheckCircle, FiXCircle, FiSearch } from 'react-icons/fi';
-import { contractorsAPI, adminAPI, getErrorMessage } from '../services/api';
+import { adminAPI, getErrorMessage } from '../services/api';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
