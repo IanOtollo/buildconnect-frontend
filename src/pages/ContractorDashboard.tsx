@@ -176,10 +176,10 @@ const ContractorDashboard: React.FC = () => {
                 <FiZap className="text-blue-400" />
                 New Opportunities
               </h2>
-              <span className="text-xs text-gray-500 font-medium">{assignments.length} pending requests</span>
+              <span className="text-xs text-gray-500 font-medium">{(Array.isArray(assignments) ? assignments.length : 0)} pending requests</span>
             </div>
 
-            {assignments.length === 0 ? (
+            {(!Array.isArray(assignments) || assignments.length === 0) ? (
               <div className="glass-card p-12 text-center border-dashed border-white/5 bg-transparent">
                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
                   <FiBriefcase className="text-3xl text-gray-600" />
@@ -191,33 +191,33 @@ const ContractorDashboard: React.FC = () => {
               </div>
             ) : (
               <div className="grid gap-4">
-                {assignments.map((assignment) => (
+                {Array.isArray(assignments) && assignments.map((assignment) => (
                   <div key={assignment.id} className="glass-card p-6 group hover:bg-white/[0.07] transition-all border border-white/5 hover:border-blue-500/30">
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                            {assignment.service_request.title}
+                            {assignment?.service_request?.title || 'Untitled Request'}
                           </h3>
                           <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/5 text-gray-400 font-bold uppercase tracking-wider border border-white/10">
-                            {typeof assignment.service_request.category === 'object' ? (assignment.service_request.category as any).name : assignment.service_request.category}
+                            {typeof assignment?.service_request?.category === 'object' ? (assignment.service_request.category as any).name : assignment?.service_request?.category || 'General'}
                           </span>
                         </div>
                         <p className="text-gray-400 text-sm mb-4 leading-relaxed line-clamp-2">
-                          {assignment.service_request.description}
+                          {assignment?.service_request?.description || 'No description provided.'}
                         </p>
                         <div className="flex flex-wrap items-center gap-6">
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FiTrendingUp className="text-emerald-400/60" />
-                            Job Budget: <span className="text-gray-200 font-bold">KES {assignment.service_request.budget?.toLocaleString() || '0'}</span>
+                            Job Budget: <span className="text-gray-200 font-bold">KES {assignment?.service_request?.budget?.toLocaleString() || '0'}</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FiMapPin className="text-purple-400/60" />
-                            {assignment.service_request.location}
+                            {assignment?.service_request?.location || 'Location N/A'}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <FiClock className="text-blue-400/60" />
-                            2 hours ago
+                            {assignment?.service_request?.created_at ? new Date(assignment.service_request.created_at).toLocaleDateString() : 'Just now'}
                           </div>
                         </div>
                       </div>
