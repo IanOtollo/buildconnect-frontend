@@ -9,6 +9,15 @@ const api = axios.create({
   baseURL: getBaseURL(),
 });
 
+// Interceptor to add auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 const getErrorMessage = (error: any) => {
   if (error.response && error.response.data && error.response.data.message) {
     return error.response.data.message;
