@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { contractorsAPI, assignmentsAPI, walletAPI } from '../services/api';
 import type { ContractorProfile, Assignment, WalletBalance } from '../types';
 import {
