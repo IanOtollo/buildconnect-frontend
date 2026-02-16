@@ -115,7 +115,7 @@ const ClientDashboard: React.FC = () => {
                 <div>
                   <span className="text-gray-400 text-sm font-medium">Available Balance</span>
                   <p className="text-3xl font-black text-white">
-                    KES {wallet?.available_balance.toLocaleString() || '0'}
+                    KES {wallet?.available_balance?.toLocaleString() ?? '0'}
                   </p>
                 </div>
               </div>
