@@ -104,11 +104,11 @@ const AIEstimation: React.FC = () => {
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="glass-card p-6 border-l-4 border-l-primary-500">
                                 <div className="text-sm text-gray-500 font-bold uppercase mb-1">Estimated Total Cost</div>
-                                <div className="text-3xl font-black text-white">{result.estimate.total_cost}</div>
+                                <div className="text-3xl font-black text-white">{result.estimate?.total_cost || 'N/A'}</div>
                             </div>
                             <div className="glass-card p-6 border-l-4 border-l-secondary-500">
                                 <div className="text-sm text-gray-500 font-bold uppercase mb-1">Projected Timeline</div>
-                                <div className="text-3xl font-black text-white">{result.estimate.timeline}</div>
+                                <div className="text-3xl font-black text-white">{result.estimate?.timeline || 'N/A'}</div>
                             </div>
                         </div>
 
