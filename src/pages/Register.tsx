@@ -271,6 +271,7 @@ const Register: React.FC = () => {
                         value={contractorData.full_name}
                         onChange={(e) => setContractorData({ ...contractorData, full_name: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="Ian Otollo"
                       />
                     </div>
                     <div className="space-y-2">
@@ -281,8 +282,44 @@ const Register: React.FC = () => {
                         value={contractorData.business_name}
                         onChange={(e) => setContractorData({ ...contractorData, business_name: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="Otollo Solutions"
                       />
                     </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={contractorData.email}
+                        onChange={(e) => setContractorData({ ...contractorData, email: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="ian@otollo.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        value={contractorData.phone}
+                        onChange={(e) => setContractorData({ ...contractorData, phone: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="0700 000 000"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={contractorData.password}
+                      onChange={(e) => setContractorData({ ...contractorData, password: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      placeholder="••••••••"
+                    />
                   </div>
                 </div>
 
@@ -319,6 +356,30 @@ const Register: React.FC = () => {
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                         />
                       </div>
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Location / Service Area</label>
+                      <input
+                        type="text"
+                        required
+                        value={contractorData.location}
+                        onChange={(e) => setContractorData({ ...contractorData, location: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="Nairobi, Kenya"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-300 ml-1">Years of Experience</label>
+                      <input
+                        type="number"
+                        required
+                        value={contractorData.years_of_experience}
+                        onChange={(e) => setContractorData({ ...contractorData, years_of_experience: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="5"
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
