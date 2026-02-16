@@ -203,8 +203,8 @@ const AdminDashboard = () => {
                                                         {contractor.business_name.substring(0, 2).toUpperCase()}
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-medium text-white">{contractor.business_name}</div>
-                                                        <div className="text-sm text-gray-400">{contractor.user.full_name}</div>
+                                                        <div className="text-sm font-medium text-white">{contractor?.business_name || 'Unknown Business'}</div>
+                                                        <div className="text-sm text-gray-400">{contractor?.user?.full_name || 'Unknown User'}</div>
                                                     </div>
                                                 </div>
                                             </td>
