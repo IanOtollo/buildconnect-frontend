@@ -34,7 +34,7 @@ const ClientDashboard: React.FC = () => {
         serviceRequestsAPI.getAll(),
         walletAPI.getBalance(),
       ]);
-      setRequests(requestsRes.data);
+      setRequests(Array.isArray(requestsRes.data) ? requestsRes.data : []);
       setWallet(walletRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -101,7 +101,7 @@ const ClientDashboard: React.FC = () => {
               <span className="text-gray-400 text-sm font-medium">Active</span>
             </div>
             <p className="text-3xl font-black text-white">
-              {requests.filter(r => !['completed', 'cancelled'].includes(r.status)).length}
+              {(Array.isArray(requests) ? requests : []).filter(r => !['completed', 'cancelled'].includes(r.status)).length}
             </p>
           </div>
 
