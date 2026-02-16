@@ -1,7 +1,8 @@
+```
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FiUsers, FiBriefcase, FiActivity, FiShield, FiCheckCircle, FiXCircle, FiSearch } from 'react-icons/fi';
-import { contractorsAPI } from '../services/api';
+import { contractorsAPI, adminAPI, getErrorMessage } from '../services/api';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
@@ -14,48 +15,62 @@ const AdminDashboard = () => {
     const [pendingContractors, setPendingContractors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Mock data fetching for now, or real if API exists
+    const fetchAdminData = async () => {
+        try {
+            const response = await adminAPI.getDashboard();
+            const data = response.data;
+            
+            setStats({
+                totalUsers: data.stats.total_clients || 0,
+                activeContractors: data.stats.approved_contractors || 0,
+                pendingApprovals: data.stats.pending_contractors || 0,
+                totalProjects: data.stats.total_requests || 0
+            });
+            
+            setPendingContractors(data.pending_contractors || []);
+            setLoading(false);
+        } catch (error) {
+            console.error("Failed to fetch admin data", error);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchAdminData = async () => {
-            try {
-                // In a real app, we'd have specific admin endpoints
-                // For now, we'll try to fetch pending contractors using the existing list endpoint if it supports it
-                // or just mock it for the UI demonstration since we only realized admin user exists
-
-                // Simulating data fetch
-                setTimeout(() => {
-                    setStats({
-                        totalUsers: 154,
-                        activeContractors: 42,
-                        pendingApprovals: 5,
-                        totalProjects: 89
-                    });
-
-                    setPendingContractors([
-                        { id: 1, business_name: 'BuildRight Construction', user: { full_name: 'John Doe', email: 'john@example.com' }, category: 'General', created_at: '2024-03-10' },
-                        { id: 2, business_name: 'Spark Electric', user: { full_name: 'Mike Smith', email: 'mike@example.com' }, category: 'Electrical', created_at: '2024-03-11' }
-                    ]);
-                    setLoading(false);
-                }, 1000);
-
-            } catch (error) {
-                console.error("Failed to fetch admin data", error);
-                setLoading(false);
-            }
-        };
-
         fetchAdminData();
     }, []);
 
-    const handleApprove = (id: number) => {
-        // API call would go here
-        setPendingContractors(prev => prev.filter(c => c.id !== id));
-        // toast success
+    const handleApprove = async (id: number) => {
+        try {
+            await adminAPI.verifyContractor({ contractor_id: id, action: 'approve' });
+            // Refresh data
+            setPendingContractors(prev => prev.filter(c => c.id !== id));
+            setStats(prev => ({
+                ...prev,
+                pendingApprovals: prev.pendingApprovals - 1,
+                activeContractors: prev.activeContractors + 1
+            }));
+        } catch (error) {
+            console.error("Failed to approve contractor", error);
+            alert(getErrorMessage(error));
+        }
     };
 
-    const handleReject = (id: number) => {
-        // API call would go here
-        setPendingContractors(prev => prev.filter(c => c.id !== id));
+    const handleReject = async (id: number) => {
+        if (!window.confirm("Are you sure you want to reject this application?")) return;
+        
+        try {
+            const reason = prompt("Enter rejection reason:") || "Requirements not met";
+            await adminAPI.verifyContractor({ contractor_id: id, action: 'reject', reason });
+            // Refresh data
+            setPendingContractors(prev => prev.filter(c => c.id !== id));
+            setStats(prev => ({
+                ...prev,
+                pendingApprovals: prev.pendingApprovals - 1
+            }));
+        } catch (error) {
+            console.error("Failed to reject contractor", error);
+            alert(getErrorMessage(error));
+        }
     };
 
     if (loading) {

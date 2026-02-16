@@ -60,4 +60,10 @@ export const paymentsAPI = {
     api.post('/payments/stkpush', data),
 };
 
+export const adminAPI = {
+  getDashboard: () => api.get('/admin/dashboard'),
+  verifyContractor: (data: { contractor_id: number; action: 'approve' | 'reject'; reason?: string }) =>
+    api.post('/admin/verify', data),
+};
+
 export { api, getErrorMessage };
