@@ -100,6 +100,7 @@ const Register: React.FC = () => {
     try {
       const formData = new FormData();
       Object.entries(contractorData).forEach(([key, value]) => formData.append(key, value));
+      formData.append('role', 'contractor');
       if (documents.id_document) formData.append('id_document', documents.id_document);
       if (documents.kra_pin_document) formData.append('kra_pin_document', documents.kra_pin_document);
       if (documents.work_permit_document) formData.append('work_permit_document', documents.work_permit_document);
