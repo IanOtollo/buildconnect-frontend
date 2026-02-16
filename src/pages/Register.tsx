@@ -271,7 +271,7 @@ const Register: React.FC = () => {
                         value={contractorData.full_name}
                         onChange={(e) => setContractorData({ ...contractorData, full_name: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                        placeholder="Ian Otollo"
+                        placeholder="John Doe"
                       />
                     </div>
                     <div className="space-y-2">
@@ -282,7 +282,7 @@ const Register: React.FC = () => {
                         value={contractorData.business_name}
                         onChange={(e) => setContractorData({ ...contractorData, business_name: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                        placeholder="Otollo Solutions"
+                        placeholder="Build Masters Ltd"
                       />
                     </div>
                   </div>
@@ -295,7 +295,7 @@ const Register: React.FC = () => {
                         value={contractorData.email}
                         onChange={(e) => setContractorData({ ...contractorData, email: e.target.value })}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                        placeholder="ian@otollo.com"
+                        placeholder="contact@company.com"
                       />
                     </div>
                     <div className="space-y-2">
