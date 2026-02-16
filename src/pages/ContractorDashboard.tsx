@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi';
 
 const ContractorDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [wallet, setWallet] = useState<WalletBalance | null>(null);
@@ -80,7 +81,8 @@ const ContractorDashboard: React.FC = () => {
       under_review: { label: 'Under Review', color: 'text-blue-400 bg-blue-400/10 border-blue-400/20', icon: FiActivity },
       rejected: { label: 'Action Required', color: 'text-red-400 bg-red-400/10 border-red-400/20', icon: FiX },
     };
-    return (profile?.verification_status && statuses[profile.verification_status]) || { label: profile?.verification_status || 'Under Review', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20', icon: FiZap };
+    const status = profile?.status || profile?.verification_status || 'pending';
+    return (status && statuses[status]) || { label: status || 'Under Review', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20', icon: FiZap };
   };
 
   if (loading) {
@@ -111,7 +113,7 @@ const ContractorDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-            <p className="text-gray-400">Welcome back, {profile?.full_name}. Here is your operations overview.</p>
+            <p className="text-gray-400">Welcome back, {profile?.full_name || user?.full_name || 'Pro'}. Here is your operations overview.</p>
           </div>
           <button
             onClick={toggleAvailability}

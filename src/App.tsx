@@ -14,6 +14,8 @@ import WalletDeposit from './pages/WalletDeposit';
 import TransactionHistory from './pages/TransactionHistory';
 import AIEstimation from './pages/AIEstimation';
 import AdminDashboard from './pages/AdminDashboard';
+import ProfileEdit from './pages/ProfileEdit';
+import WalletWithdraw from './pages/WalletWithdraw';
 
 
 // Protected Route wrapper
@@ -104,6 +106,33 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TransactionHistory />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/wallet/history"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/wallet/transactions" replace />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/wallet/withdraw"
+              element={
+                <ProtectedRoute>
+                  <WalletWithdraw />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/profile/edit"
+              element={
+                <ProtectedRoute>
+                  <ProfileEdit />
                 </ProtectedRoute>
               }
             />
