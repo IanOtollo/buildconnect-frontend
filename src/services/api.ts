@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const url = process.env.REACT_APP_API_URL || '';
+  return url.endsWith('/api') ? url : `${url.replace(/\/$/, '')}/api`;
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: getBaseURL(),
   withCredentials: true,
 });
 
