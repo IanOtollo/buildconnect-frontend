@@ -1,4 +1,4 @@
-```
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FiUsers, FiBriefcase, FiActivity, FiShield, FiCheckCircle, FiXCircle, FiSearch } from 'react-icons/fi';
@@ -19,14 +19,14 @@ const AdminDashboard = () => {
         try {
             const response = await adminAPI.getDashboard();
             const data = response.data;
-            
+
             setStats({
                 totalUsers: data.stats.total_clients || 0,
                 activeContractors: data.stats.approved_contractors || 0,
                 pendingApprovals: data.stats.pending_contractors || 0,
                 totalProjects: data.stats.total_requests || 0
             });
-            
+
             setPendingContractors(data.pending_contractors || []);
             setLoading(false);
         } catch (error) {
@@ -57,7 +57,7 @@ const AdminDashboard = () => {
 
     const handleReject = async (id: number) => {
         if (!window.confirm("Are you sure you want to reject this application?")) return;
-        
+
         try {
             const reason = prompt("Enter rejection reason:") || "Requirements not met";
             await adminAPI.verifyContractor({ contractor_id: id, action: 'reject', reason });
