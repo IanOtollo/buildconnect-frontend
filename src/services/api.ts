@@ -77,6 +77,7 @@ export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
   verifyContractor: (data: { contractor_id: number; action: 'approve' | 'reject'; reason?: string }) =>
     api.post('/admin/verify', data),
+  createUser: (data: any) => api.post('/admin/users', data),
 };
 
 export { api, getErrorMessage };

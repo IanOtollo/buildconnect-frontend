@@ -21,6 +21,30 @@ const AdminDashboard = () => {
     const [activity, setActivity] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [newUser, setNewUser] = useState({
+        full_name: '',
+        email: '',
+        phone: '',
+        password: '',
+        role: 'client'
+    });
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await adminAPI.createUser(newUser);
+            setShowAddModal(false);
+            setNewUser({ full_name: '', email: '', phone: '', password: '', role: 'client' });
+            fetchAdminData();
+        } catch (error) {
+            alert(getErrorMessage(error));
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const fetchAdminData = async () => {
         try {
@@ -94,8 +118,8 @@ const AdminDashboard = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === tab.id
-                                        ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
+                                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -203,8 +227,8 @@ const AdminDashboard = () => {
                                             <div key={idx} className="flex gap-4 group">
                                                 <div className="relative">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.type === 'user' ? 'bg-blue-500/10 text-blue-400' :
-                                                            item.type === 'request' ? 'bg-purple-500/10 text-purple-400' :
-                                                                'bg-amber-500/10 text-amber-400'
+                                                        item.type === 'request' ? 'bg-purple-500/10 text-purple-400' :
+                                                            'bg-amber-500/10 text-amber-400'
                                                         }`}>
                                                         {item.type === 'user' ? <FiUser /> : item.type === 'request' ? <FiGrid /> : <FiShield />}
                                                     </div>
@@ -328,7 +352,10 @@ const AdminDashboard = () => {
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-black text-white">User Infrastructure</h2>
-                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-white text-sm font-bold border border-white/10 hover:bg-white/10 transition-all">
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 text-white text-sm font-bold border border-purple-500/20 hover:bg-purple-400 transition-all shadow-lg shadow-purple-500/20"
+                            >
                                 <FiPlus /> Add Manual User
                             </button>
                         </div>
@@ -358,8 +385,8 @@ const AdminDashboard = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter ${u.role === 'admin' ? 'bg-amber-400/10 text-amber-400' :
-                                                        u.role === 'contractor' ? 'bg-purple-400/10 text-purple-400' :
-                                                            'bg-blue-400/10 text-blue-400'
+                                                    u.role === 'contractor' ? 'bg-purple-400/10 text-purple-400' :
+                                                        'bg-blue-400/10 text-blue-400'
                                                     }`}>
                                                     {u.role}
                                                 </span>
@@ -373,6 +400,51 @@ const AdminDashboard = () => {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Modal */}
+                        {showAddModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                <div className="glass-card w-full max-w-lg p-8 animate-in zoom-in duration-300">
+                                    <div className="flex justify-between items-center mb-8">
+                                        <h3 className="text-2xl font-bold text-white">Manual Enrollment</h3>
+                                        <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-white"><FiXCircle size={24} /></button>
+                                    </div>
+                                    <form onSubmit={handleCreateUser} className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Full Name</label>
+                                                <input required value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="glass-input w-full h-12" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Phone</label>
+                                                <input required value={newUser.phone} onChange={e => setNewUser({ ...newUser, phone: e.target.value })} className="glass-input w-full h-12" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Email Address</label>
+                                            <input required type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} className="glass-input w-full h-12" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Password</label>
+                                                <input required type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} className="glass-input w-full h-12" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">System Role</label>
+                                                <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="glass-input w-full h-12">
+                                                    <option value="client">Client</option>
+                                                    <option value="contractor">Contractor</option>
+                                                    <option value="admin">Administrator</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button disabled={submitting} type="submit" className="w-full h-14 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-400 transition-all flex items-center justify-center gap-2">
+                                            {submitting ? "Processing..." : <><FiCheckCircle /> Create Identity</>}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
