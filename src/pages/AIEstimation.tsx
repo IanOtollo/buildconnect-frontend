@@ -127,13 +127,17 @@ const AIEstimation: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        {result.estimate.materials.map((m, i) => (
+                                        {result.estimate?.materials?.map((m, i) => (
                                             <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                                                 <td className="px-6 py-4 text-white font-medium">{m.item}</td>
                                                 <td className="px-6 py-4 text-gray-400">{m.quantity}</td>
                                                 <td className="px-6 py-4 text-primary-400 font-bold">{m.estimated_cost}</td>
                                             </tr>
-                                        ))}
+                                        )) || (
+                                                <tr>
+                                                    <td colSpan={3} className="px-6 py-8 text-center text-gray-500 italic">No material breakdown available</td>
+                                                </tr>
+                                            )}
                                     </tbody>
                                 </table>
                             </div>
@@ -143,7 +147,7 @@ const AIEstimation: React.FC = () => {
                         <div className="glass-card p-6">
                             <h3 className="text-lg font-bold mb-6">Expert AI Recommendations</h3>
                             <div className="grid md:grid-cols-2 gap-4">
-                                {result.estimate.recommendations.map((rec, i) => (
+                                {result.estimate?.recommendations?.map((rec, i) => (
                                     <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
                                         <div className="w-6 h-6 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                                             <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
