@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
     FiUsers, FiBriefcase, FiActivity, FiShield, FiCheckCircle,
     FiXCircle, FiSearch, FiDollarSign, FiClock, FiGrid,
-    FiArrowRight, FiUser, FiSettings, FiPlus, FiMoreVertical,
+    FiUser, FiSettings, FiPlus, FiMoreVertical,
     FiEdit2, FiTrash2, FiAlertCircle
 } from 'react-icons/fi';
 import { adminAPI, getErrorMessage } from '../services/api';

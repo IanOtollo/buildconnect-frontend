@@ -11,13 +11,6 @@ const Contractors: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchContractors();
-    if (categoryId) {
-      fetchCategoryName();
-    }
-  }, [categoryId]);
-
   const fetchCategoryName = async () => {
     try {
       const response = await categoriesAPI.getById(categoryId!);
@@ -31,12 +24,20 @@ const Contractors: React.FC = () => {
     try {
       const response = await contractorsAPI.getAll();
       setContractors(response.data);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching contractors:', error);
-    } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchContractors();
+    if (categoryId) {
+      fetchCategoryName();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId]);
 
   // Filter by category if categoryId is present
   const categoryFilteredContractors = categoryId
