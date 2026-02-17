@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FiX, FiMenu } from 'react-icons/fi';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout, isClient, isContractor } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +21,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+    setIsMobileMenuOpen(false);
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -27,7 +30,7 @@ const Navbar: React.FC = () => {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-3' : 'py-5'
       }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`glass-card px-6 py-3 flex justify-between items-center transition-all duration-500 ${isScrolled ? 'bg-gray-900/80' : 'bg-gray-900/40'
+        <div className={`glass-card px-4 sm:px-6 py-3 flex justify-between items-center transition-all duration-500 ${isScrolled ? 'bg-gray-900/80' : 'bg-gray-900/40'
           }`}>
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
@@ -103,15 +106,86 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button - Placeholder for mobile revamp */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
-            <button className="text-gray-400 hover:text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-gray-400 hover:text-white p-2"
+            >
+              {isMobileMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mt-2 glass-card p-4 space-y-3 animate-in slide-in-from-top duration-300">
+            <Link
+              to="/categories"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              Services
+            </Link>
+            <Link
+              to="/ai-estimate"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              AI Estimate
+            </Link>
+            <Link
+              to="/contractors"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              Contractors
+            </Link>
+
+            {isAuthenticated ? (
+              <>
+                {(isClient || isContractor || user?.role === 'admin') && (
+                  <Link
+                    to={isClient ? "/client/dashboard" : isContractor ? "/contractor/dashboard" : "/admin/dashboard"}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <div className="border-t border-white/10 pt-3 mt-3">
+                  <div className="px-4 py-2 mb-2">
+                    <p className="text-sm font-semibold text-white">{user?.full_name}</p>
+                    <p className="text-xs text-primary-500 uppercase font-bold">{user?.role}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full btn-secondary !py-2"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="border-t border-white/10 pt-3 mt-3 space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 px-4 text-center text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block btn-primary !py-2 text-center"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );
