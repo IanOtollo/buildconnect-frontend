@@ -78,6 +78,8 @@ export const adminAPI = {
   verifyContractor: (data: { contractor_id: number; action: 'approve' | 'reject'; reason?: string }) =>
     api.post('/admin/verify', data),
   createUser: (data: any) => api.post('/admin/users', data),
+  updateUser: (id: number, data: any) => api.put('/admin/users', { id, ...data }),
+  deleteUser: (id: number) => api.delete('/admin/users', { data: { id } }),
 };
 
 export { api, getErrorMessage };

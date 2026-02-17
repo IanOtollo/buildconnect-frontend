@@ -3,33 +3,41 @@ import { useAuth } from '../context/AuthContext';
 import {
     FiUsers, FiBriefcase, FiActivity, FiShield, FiCheckCircle,
     FiXCircle, FiSearch, FiDollarSign, FiClock, FiGrid,
-    FiArrowRight, FiUser, FiSettings, FiPlus
+    FiArrowRight, FiUser, FiSettings, FiPlus, FiMoreVertical,
+    FiEdit2, FiTrash2, FiAlertCircle
 } from 'react-icons/fi';
 import { adminAPI, getErrorMessage } from '../services/api';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
-    const [activeTab, setActiveTab] = useState('overview');
-    const [stats, setStats] = useState<any>({
-        total_clients: 0,
-        approved_contractors: 0,
-        pending_contractors: 0,
-        total_revenue: 0,
-        total_requests: 0
-    });
+    const [stats, setStats] = useState<any>({});
     const [pendingContractors, setPendingContractors] = useState<any[]>([]);
-    const [activity, setActivity] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
+    const [activity, setActivity] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
+
+    // Add Manual User Modal
     const [showAddModal, setShowAddModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
     const [newUser, setNewUser] = useState({
-        full_name: '',
         email: '',
-        phone: '',
         password: '',
+        full_name: '',
+        phone: '',
         role: 'client'
     });
+    const [submitting, setSubmitting] = useState(false);
+
+    // Edit User Modal
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editUser, setEditUser] = useState<any>(null);
+
+    // Delete Confirmation
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<any>(null);
+
+    // Operations dropdown
+    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,10 +45,45 @@ const AdminDashboard = () => {
         try {
             await adminAPI.createUser(newUser);
             setShowAddModal(false);
-            setNewUser({ full_name: '', email: '', phone: '', password: '', role: 'client' });
+            setNewUser({ email: '', password: '', full_name: '', phone: '', role: 'client' });
             fetchAdminData();
-        } catch (error) {
-            alert(getErrorMessage(error));
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to create user');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleEditUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await adminAPI.updateUser(editUser.id, {
+                email: editUser.email,
+                full_name: editUser.full_name,
+                phone: editUser.phone,
+                role: editUser.role
+            });
+            setShowEditModal(false);
+            setEditUser(null);
+            fetchAdminData();
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to update user');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+        setSubmitting(true);
+        try {
+            await adminAPI.deleteUser(userToDelete.id);
+            setShowDeleteModal(false);
+            setUserToDelete(null);
+            fetchAdminData();
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to delete user');
         } finally {
             setSubmitting(false);
         }
@@ -117,18 +160,18 @@ const AdminDashboard = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === tab.id
+                                className={`w - full flex items - center justify - between px - 4 py - 3 rounded - xl text - sm font - semibold transition - all ${activeTab === tab.id
                                     ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
                                     : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                    }`}
+                                    } `}
                             >
                                 <div className="flex items-center gap-3">
                                     <tab.icon size={18} />
                                     {tab.label}
                                 </div>
                                 {tab.badge ? (
-                                    <span className={`px-2 py-0.5 rounded-md text-[10px] ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-purple-500/20 text-purple-400'
-                                        }`}>
+                                    <span className={`px - 2 py - 0.5 rounded - md text - [10px] ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-purple-500/20 text-purple-400'
+                                        } `}>
                                         {tab.badge}
                                     </span>
                                 ) : null}
@@ -226,10 +269,10 @@ const AdminDashboard = () => {
                                         {activity.map((item, idx) => (
                                             <div key={idx} className="flex gap-4 group">
                                                 <div className="relative">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.type === 'user' ? 'bg-blue-500/10 text-blue-400' :
+                                                    <div className={`w - 10 h - 10 rounded - xl flex items - center justify - center ${item.type === 'user' ? 'bg-blue-500/10 text-blue-400' :
                                                         item.type === 'request' ? 'bg-purple-500/10 text-purple-400' :
                                                             'bg-amber-500/10 text-amber-400'
-                                                        }`}>
+                                                        } `}>
                                                         {item.type === 'user' ? <FiUser /> : item.type === 'request' ? <FiGrid /> : <FiShield />}
                                                     </div>
                                                     {idx !== activity.length - 1 && (
@@ -384,16 +427,47 @@ const AdminDashboard = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter ${u.role === 'admin' ? 'bg-amber-400/10 text-amber-400' :
+                                                <span className={`px - 2 py - 1 rounded - md text - [10px] font - black uppercase tracking - tighter ${u.role === 'admin' ? 'bg-amber-400/10 text-amber-400' :
                                                     u.role === 'contractor' ? 'bg-purple-400/10 text-purple-400' :
                                                         'bg-blue-400/10 text-blue-400'
-                                                    }`}>
+                                                    } `}>
                                                     {u.role}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-xs text-gray-500">{new Date(u.created_at).toLocaleDateString()}</td>
                                             <td className="px-6 py-4 text-right">
-                                                <button className="text-gray-500 hover:text-white transition-colors"><FiArrowRight /></button>
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setOpenDropdown(openDropdown === u.id ? null : u.id)}
+                                                        className="text-gray-500 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5"
+                                                    >
+                                                        <FiMoreVertical />
+                                                    </button>
+                                                    {openDropdown === u.id && (
+                                                        <div className="absolute right-0 top-full mt-2 w-48 glass-card border border-white/10 shadow-xl z-10">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditUser(u);
+                                                                    setShowEditModal(true);
+                                                                    setOpenDropdown(null);
+                                                                }}
+                                                                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <FiEdit2 className="text-blue-400" /> Edit User
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setUserToDelete(u);
+                                                                    setShowDeleteModal(true);
+                                                                    setOpenDropdown(null);
+                                                                }}
+                                                                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-400/10 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <FiTrash2 /> Delete User
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -442,6 +516,75 @@ const AdminDashboard = () => {
                                             {submitting ? "Processing..." : <><FiCheckCircle /> Create Identity</>}
                                         </button>
                                     </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Edit User Modal */}
+                        {showEditModal && editUser && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                <div className="glass-card w-full max-w-lg p-8 animate-in zoom-in duration-300">
+                                    <div className="flex justify-between items-center mb-8">
+                                        <h3 className="text-2xl font-bold text-white">Edit User</h3>
+                                        <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-white"><FiXCircle size={24} /></button>
+                                    </div>
+                                    <form onSubmit={handleEditUser} className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Full Name</label>
+                                                <input required value={editUser.full_name} onChange={e => setEditUser({ ...editUser, full_name: e.target.value })} className="glass-input w-full h-12" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Phone</label>
+                                                <input required value={editUser.phone} onChange={e => setEditUser({ ...editUser, phone: e.target.value })} className="glass-input w-full h-12" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">Email Address</label>
+                                            <input required type="email" value={editUser.email} onChange={e => setEditUser({ ...editUser, email: e.target.value })} className="glass-input w-full h-12" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase block mb-2">System Role</label>
+                                            <select value={editUser.role} onChange={e => setEditUser({ ...editUser, role: e.target.value })} className="glass-input w-full h-12">
+                                                <option value="client">Client</option>
+                                                <option value="contractor">Contractor</option>
+                                                <option value="admin">Administrator</option>
+                                            </select>
+                                        </div>
+                                        <button disabled={submitting} type="submit" className="w-full h-14 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-400 transition-all flex items-center justify-center gap-2">
+                                            {submitting ? "Updating..." : <><FiCheckCircle /> Update User</>}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Delete Confirmation Modal */}
+                        {showDeleteModal && userToDelete && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                <div className="glass-card w-full max-w-md p-8 animate-in zoom-in duration-300">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                                            <FiAlertCircle className="text-red-500" size={32} />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white mb-2">Delete User?</h3>
+                                        <p className="text-gray-400 mb-6">Are you sure you want to delete <span className="text-white font-bold">{userToDelete.full_name}</span>? This action cannot be undone.</p>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setShowDeleteModal(false)}
+                                                className="flex-1 h-12 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleDeleteUser}
+                                                disabled={submitting}
+                                                className="flex-1 h-12 bg-red-500 text-white font-bold rounded-xl hover:bg-red-400 transition-all"
+                                            >
+                                                {submitting ? "Deleting..." : "Delete"}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
