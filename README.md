@@ -1,5 +1,4 @@
 # BuildConnect Frontend
-
 Professional React + TypeScript frontend for the BuildConnect platform.
 
 ## Features
