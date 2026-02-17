@@ -1,17 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { contractorsAPI } from '../services/api';
+import { Link, useParams } from 'react-router-dom';
+import { contractorsAPI, categoriesAPI } from '../services/api';
 import type { ContractorProfile } from '../types';
 import { FiUsers, FiSearch, FiStar, FiShield, FiMapPin, FiChevronRight } from 'react-icons/fi';
 
 const Contractors: React.FC = () => {
+  const { id: categoryId } = useParams<{ id: string }>();
   const [contractors, setContractors] = useState<ContractorProfile[]>([]);
+  const [categoryName, setCategoryName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchContractors();
-  }, []);
+    if (categoryId) {
+      fetchCategoryName();
+    }
+  }, [categoryId]);
+
+  const fetchCategoryName = async () => {
+    try {
+      const response = await categoriesAPI.getById(categoryId!);
+      setCategoryName(response.data.name);
+    } catch (error) {
+      console.error('Error fetching category:', error);
+    }
+  };
 
   const fetchContractors = async () => {
     try {
@@ -24,7 +38,12 @@ const Contractors: React.FC = () => {
     }
   };
 
-  const filteredContractors = contractors.filter(
+  // Filter by category if categoryId is present
+  const categoryFilteredContractors = categoryId
+    ? contractors.filter(c => c.category.toLowerCase() === categoryName.toLowerCase())
+    : contractors;
+
+  const filteredContractors = categoryFilteredContractors.filter(
     (contractor) =>
       contractor.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contractor.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,10 +65,18 @@ const Contractors: React.FC = () => {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 mb-4">
               <FiUsers className="text-primary-400 text-xs" />
-              <span className="text-primary-400 text-xs font-bold uppercase tracking-widest">Verified Experts</span>
+              <span className="text-primary-400 text-xs font-bold uppercase tracking-widest">
+                {categoryId ? `${categoryName} Specialists` : 'Verified Experts'}
+              </span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2">BuildConnect Professionals</h1>
-            <p className="text-gray-500 font-medium">Browse our elite network of verified contractors.</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {categoryId ? `${categoryName} Professionals` : 'BuildConnect Professionals'}
+            </h1>
+            <p className="text-gray-500 font-medium">
+              {categoryId
+                ? `Browse our elite network of verified ${categoryName.toLowerCase()} contractors.`
+                : 'Browse our elite network of verified contractors.'}
+            </p>
           </div>
         </div>
 
@@ -68,7 +95,7 @@ const Contractors: React.FC = () => {
           </div>
           <div className="glass-card flex items-center justify-between px-6 h-16">
             <span className="text-gray-500 text-sm font-bold uppercase">Total Pros</span>
-            <span className="text-2xl font-black text-white">{contractors.length}</span>
+            <span className="text-2xl font-black text-white">{categoryFilteredContractors.length}</span>
           </div>
         </div>
 
