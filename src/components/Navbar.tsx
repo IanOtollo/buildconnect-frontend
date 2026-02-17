@@ -67,6 +67,11 @@ const Navbar: React.FC = () => {
                     Dashboard
                   </Link>
                 )}
+                {user?.role === 'admin' && (
+                  <Link to="/admin/dashboard" className={`nav-link ${isActive('/admin/dashboard') ? 'text-white after:w-full' : ''}`}>
+                    Dashboard
+                  </Link>
+                )}
                 <div className="flex items-center pl-4 border-l border-white/10 space-x-4">
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-semibold text-white">{user?.full_name}</span>
