@@ -65,7 +65,7 @@ const WalletDeposit: React.FC = () => {
             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2">Available Balance</div>
             <div className="text-5xl font-black text-white">
               <span className="text-primary-500 text-2xl mr-2">KES</span>
-              {walletBalance.toLocaleString()}
+              {(walletBalance || 0).toLocaleString()}
             </div>
           </div>
         )}
