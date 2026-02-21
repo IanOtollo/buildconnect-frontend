@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { contractorsAPI, categoriesAPI } from '../services/api';
 import type { ContractorProfile } from '../types';
-import { FiUsers, FiSearch, FiStar, FiShield, FiMapPin, FiChevronRight } from 'react-icons/fi';
+import { FiUsers, FiSearch, FiStar, FiShield, FiMapPin } from 'react-icons/fi';
 
 const Contractors: React.FC = () => {
   const { id: categoryId } = useParams<{ id: string }>();
