@@ -58,6 +58,11 @@ export const contractorsAPI = {
   updateAvailability: (is_available: boolean) => api.patch('/contractors/me', { is_available }),
 };
 
+export const notificationsAPI = {
+  getAll: () => api.get('/notifications/get'),
+  markRead: (id?: number) => api.post('/notifications/get', id ? { notification_id: id } : {}),
+};
+
 export const assignmentsAPI = {
   getPending: () => api.get('/assignments/pending'),
   accept: (id: number) => api.post(`/assignments/${id}/accept`),
