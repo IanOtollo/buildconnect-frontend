@@ -176,7 +176,7 @@ const Contractors: React.FC = () => {
                   >
                     Request Pros
                   </Link>
-                </div>>
+                </div>
               </div>
             ))}
           </div>
