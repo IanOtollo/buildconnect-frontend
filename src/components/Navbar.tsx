@@ -51,9 +51,7 @@ const Navbar: React.FC = () => {
             <Link to="/categories" className={`nav-link ${isActive('/categories') ? 'text-white after:w-full' : ''}`}>
               Services
             </Link>
-            <Link to="/ai-estimate" className={`nav-link ${isActive('/ai-estimate') ? 'text-white after:w-full' : ''}`}>
-              AI Estimate
-            </Link>
+
             <Link to="/contractors" className={`nav-link ${isActive('/contractors') ? 'text-white after:w-full' : ''}`}>
               Contractors
             </Link>
@@ -70,11 +68,7 @@ const Navbar: React.FC = () => {
                     Dashboard
                   </Link>
                 )}
-                {user?.role === 'admin' && (
-                  <Link to="/admin/dashboard" className={`nav-link ${isActive('/admin/dashboard') ? 'text-white after:w-full' : ''}`}>
-                    Dashboard
-                  </Link>
-                )}
+
                 <div className="flex items-center pl-4 border-l border-white/10 space-x-4">
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-semibold text-white">{user?.full_name}</span>
@@ -127,13 +121,7 @@ const Navbar: React.FC = () => {
             >
               Services
             </Link>
-            <Link
-              to="/ai-estimate"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
-            >
-              AI Estimate
-            </Link>
+
             <Link
               to="/contractors"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -144,9 +132,9 @@ const Navbar: React.FC = () => {
 
             {isAuthenticated ? (
               <>
-                {(isClient || isContractor || user?.role === 'admin') && (
+                {(isClient || isContractor) && (
                   <Link
-                    to={isClient ? "/client/dashboard" : isContractor ? "/contractor/dashboard" : "/admin/dashboard"}
+                    to={isClient ? "/client/dashboard" : "/contractor/dashboard"}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="block py-2 px-4 text-white hover:bg-white/5 rounded-lg transition-colors"
                   >

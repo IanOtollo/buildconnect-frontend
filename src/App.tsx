@@ -13,9 +13,9 @@ import NewServiceRequest from './pages/NewServiceRequest';
 import WalletDeposit from './pages/WalletDeposit';
 import TransactionHistory from './pages/TransactionHistory';
 import AIEstimation from './pages/AIEstimation';
-import AdminDashboard from './pages/AdminDashboard';
 import ProfileEdit from './pages/ProfileEdit';
 import WalletWithdraw from './pages/WalletWithdraw';
+import ServiceRequestDetails from './pages/ServiceRequestDetails';
 
 
 // Protected Route wrapper
@@ -23,14 +23,12 @@ const ProtectedRoute: React.FC<{
   children: React.ReactElement;
   requireClient?: boolean;
   requireContractor?: boolean;
-  requireAdmin?: boolean;
 }> = ({
   children,
   requireClient,
-  requireContractor,
-  requireAdmin
+  requireContractor
 }) => {
-    const { isAuthenticated, isClient, isContractor, isAdmin, isLoading } = useAuth();
+    const { isAuthenticated, isClient, isContractor, isLoading } = useAuth();
 
     if (isLoading) {
       return (
@@ -52,9 +50,6 @@ const ProtectedRoute: React.FC<{
       return <Navigate to="/" />;
     }
 
-    if (requireAdmin && !isAdmin) {
-      return <Navigate to="/" />;
-    }
 
     return children;
   };
@@ -89,6 +84,15 @@ function App() {
               element={
                 <ProtectedRoute requireClient>
                   <NewServiceRequest />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/service-requests/:id"
+              element={
+                <ProtectedRoute requireClient>
+                  <ServiceRequestDetails />
                 </ProtectedRoute>
               }
             />
@@ -147,14 +151,6 @@ function App() {
               }
             />
 
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
           </Routes>
         </div>
       </AuthProvider>

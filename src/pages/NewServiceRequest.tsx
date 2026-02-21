@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { categoriesAPI, serviceRequestsAPI, getErrorMessage } from '../services/api';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { categoriesAPI, serviceRequestsAPI, getErrorMessage, api } from '../services/api';
 import type { ServiceCategory } from '../types';
 import { FiPlus, FiMapPin, FiClock, FiDollarSign, FiInfo, FiChevronRight, FiGrid, FiEdit3, FiZap, FiShield } from 'react-icons/fi';
 
@@ -9,6 +9,10 @@ const NewServiceRequest: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preSelectedContractor = searchParams.get('contractor_id');
+  const [aiEstimate, setAiEstimate] = useState<any>(null);
+  const [estimating, setEstimating] = useState(false);
 
   const [formData, setFormData] = useState({
     category: '',
@@ -47,6 +51,7 @@ const NewServiceRequest: React.FC = () => {
         budget: parseFloat(formData.budget),
         estimated_duration: formData.estimated_duration,
         urgency: formData.urgency,
+        contractor_id: preSelectedContractor ? parseInt(preSelectedContractor) : undefined,
       } as any);
 
       navigate('/client/dashboard');
@@ -54,6 +59,26 @@ const NewServiceRequest: React.FC = () => {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEstimate = async () => {
+    if (!formData.description || !formData.location) {
+      setError('Please provide description and location to get an AI estimate.');
+      return;
+    }
+    setError('');
+    setEstimating(true);
+    try {
+      const response = await api.post('/ai/estimate', {
+        description: formData.description,
+        location: formData.location
+      });
+      setAiEstimate(response.data.estimate);
+    } catch (err: any) {
+      setError(getErrorMessage(err) || 'Failed to get AI estimate.');
+    } finally {
+      setEstimating(false);
     }
   };
 
@@ -201,23 +226,61 @@ const NewServiceRequest: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary w-full h-16 text-lg"
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Publishing Request...</span>
+                {!aiEstimate ? (
+                  <button
+                    type="button"
+                    onClick={handleEstimate}
+                    disabled={estimating}
+                    className="btn-primary w-full h-16 text-lg bg-gradient-to-r from-purple-500 to-indigo-500 border-none hover:shadow-purple-500/50"
+                  >
+                    {estimating ? (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Calculating Estimate...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <FiZap className="text-xl mr-2" />
+                        <span>Get AI Cost Estimate</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="p-6 bg-white/5 border border-primary-500/30 rounded-2xl">
+                      <h4 className="font-bold text-white mb-4 flex items-center gap-2">
+                        <FiInfo className="text-primary-500" /> AI Estimate Results
+                      </h4>
+                      <p className="text-sm text-gray-300 mb-2"><strong>Total Cost:</strong> {aiEstimate.total_cost}</p>
+                      <p className="text-sm text-gray-300 mb-4"><strong>Timeline:</strong> {aiEstimate.timeline}</p>
+                      <div className="mb-4">
+                        <strong className="text-sm text-gray-300">Materials:</strong>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          {aiEstimate.materials?.map((m: any, i: number) => (
+                            <li key={i} className="text-xs text-gray-400">{m.item} ({m.quantity}) - {m.estimated_cost}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <span>Submit Project Request</span>
-                      <FiChevronRight className="text-xl" />
-                    </>
-                  )}
-                </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-primary w-full h-16 text-lg"
+                    >
+                      {loading ? (
+                        <div className="flex items-center space-x-3">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Publishing Request...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span>Submit Project Request</span>
+                          <FiChevronRight className="text-xl ml-2" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>

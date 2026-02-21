@@ -50,7 +50,8 @@ const Register: React.FC = () => {
   const [documents, setDocuments] = useState({
     id_document: null as File | null,
     kra_pin_document: null as File | null,
-    work_permit_document: null as File | null,
+    certificate_document: null as File | null,
+    business_permit_document: null as File | null,
   });
 
   useEffect(() => {
@@ -90,8 +91,8 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (!documents.id_document || !documents.kra_pin_document) {
-      setError('ID and KRA PIN documents are required for verification');
+    if (!documents.id_document || !documents.kra_pin_document || !documents.certificate_document || !documents.business_permit_document) {
+      setError('ID, KRA PIN, Certificate, and Business Permit documents are required for verification');
       return;
     }
 
@@ -103,7 +104,8 @@ const Register: React.FC = () => {
       formData.append('role', 'contractor');
       if (documents.id_document) formData.append('id_document', documents.id_document);
       if (documents.kra_pin_document) formData.append('kra_pin_document', documents.kra_pin_document);
-      if (documents.work_permit_document) formData.append('work_permit_document', documents.work_permit_document);
+      if (documents.certificate_document) formData.append('certificate_document', documents.certificate_document);
+      if (documents.business_permit_document) formData.append('business_permit_document', documents.business_permit_document);
 
       await authAPI.registerContractor(formData);
 
@@ -432,6 +434,40 @@ const Register: React.FC = () => {
                           <p className="text-xs text-gray-400">
                             {documents.kra_pin_document ? documents.kra_pin_document.name : 'Upload KRA PIN'}
                           </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-6 mt-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 ml-1">Professional Certificate</label>
+                        <div className="relative group cursor-pointer">
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileChange(e, 'certificate_document')}
+                            className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                          />
+                          <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
+                            {React.createElement(FiUpload as any, { className: "mx-auto mb-2 text-blue-400 text-2xl" })}
+                            <p className="text-xs text-gray-400">
+                              {documents.certificate_document ? documents.certificate_document.name : 'Upload Certificate'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300 ml-1">Business Permit</label>
+                        <div className="relative group cursor-pointer">
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileChange(e, 'business_permit_document')}
+                            className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                          />
+                          <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-6 py-8 text-center group-hover:bg-white/10 transition-all">
+                            {React.createElement(FiShield as any, { className: "mx-auto mb-2 text-purple-400 text-2xl" })}
+                            <p className="text-xs text-gray-400">
+                              {documents.business_permit_document ? documents.business_permit_document.name : 'Upload Business Permit'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>

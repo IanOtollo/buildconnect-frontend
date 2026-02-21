@@ -163,13 +163,20 @@ const Contractors: React.FC = () => {
                   ))}
                 </div>
 
-                <Link
-                  to={`/contractors/${contractor.id}`}
-                  className="btn-secondary w-full group/btn"
-                >
-                  View Profile
-                  <FiChevronRight className="group-hover/btn:translate-x-1 transition-transform" />
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    to={`/contractors/${contractor.id}`}
+                    className="btn-secondary flex-1 text-center group/btn text-xs py-2"
+                  >
+                    View Profile
+                  </Link>
+                  <Link
+                    to={`/service-requests/new?contractor_id=${contractor.id}`}
+                    className="btn-primary flex-1 text-center text-xs py-2"
+                  >
+                    Request Pros
+                  </Link>
+                </div>>
               </div>
             ))}
           </div>
