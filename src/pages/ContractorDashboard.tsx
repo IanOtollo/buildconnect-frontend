@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { contractorsAPI, serviceRequestsAPI, walletAPI } from '../services/api';
 import type { WalletBalance } from '../types';
 import {
-  FiBriefcase, FiStar, FiClock, FiTrendingUp, FiMapPin, FiCheck, FiX,
-  FiChevronRight, FiActivity, FiZap, FiShield, FiCheckCircle, FiAlertCircle,
+  FiClock, FiTrendingUp, FiMapPin, FiCheck, FiX,
+  FiZap, FiShield, FiCheckCircle, FiAlertCircle,
   FiDollarSign, FiEdit
 } from 'react-icons/fi';
 

@@ -5,7 +5,7 @@ import { serviceRequestsAPI, walletAPI, paymentsAPI } from '../services/api';
 import type { ServiceRequest, WalletBalance } from '../types';
 import {
   FiPlus, FiBriefcase, FiClock, FiCheckCircle, FiXCircle, FiBox,
-  FiTrendingUp, FiActivity, FiUser, FiMapPin, FiShield, FiDollarSign,
+  FiTrendingUp, FiActivity, FiMapPin, FiShield, FiDollarSign,
   FiAlertCircle, FiThumbsUp, FiThumbsDown
 } from 'react-icons/fi';
 
