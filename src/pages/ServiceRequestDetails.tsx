@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { api, getErrorMessage } from '../services/api';
 import { FiArrowLeft, FiShield, FiDollarSign, FiClock, FiMapPin, FiCheckCircle } from 'react-icons/fi';
 
 const ServiceRequestDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
     const [request, setRequest] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -15,25 +14,25 @@ const ServiceRequestDetails: React.FC = () => {
     const [paymentSuccess, setPaymentSuccess] = useState(false);
 
     useEffect(() => {
+        const fetchRequestDetails = async () => {
+            try {
+                const response = await api.get(`/service-requests`);
+                // Simulating a fetching by ID since we don't have a specific GET endpoint
+                const req = response.data.find((r: any) => r.id === parseInt(id!));
+                if (req) {
+                    setRequest(req);
+                } else {
+                    setError('Service request not found');
+                }
+            } catch (err: any) {
+                setError(getErrorMessage(err));
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchRequestDetails();
     }, [id]);
-
-    const fetchRequestDetails = async () => {
-        try {
-            const response = await api.get(`/service-requests`);
-            // Simulating a fetching by ID since we don't have a specific GET endpoint
-            const req = response.data.find((r: any) => r.id === parseInt(id!));
-            if (req) {
-                setRequest(req);
-            } else {
-                setError('Service request not found');
-            }
-        } catch (err: any) {
-            setError(getErrorMessage(err));
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleEscrowPayment = async (e: React.FormEvent) => {
         e.preventDefault();
