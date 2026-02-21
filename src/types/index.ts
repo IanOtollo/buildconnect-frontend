@@ -75,10 +75,20 @@ export interface ServiceRequest {
   title: string;
   description: string;
   location: string;
-  budget?: number;
+  budget: number;
   estimated_duration?: string;
   urgency?: 'low' | 'medium' | 'high';
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status:
+  | 'pending'
+  | 'accepted'
+  | 'rejected'
+  | 'deposit_paid'
+  | 'pending_midpoint_approval'
+  | 'midpoint_approved'
+  | 'balance_paid'
+  | 'pending_final_approval'
+  | 'completed'
+  | 'cancelled';
   deposit_amount?: number;
   deposit_paid?: boolean;
   file_path?: string;
@@ -93,6 +103,7 @@ export interface ServiceRequest {
   contractor_email?: string;
   business_name?: string;
 }
+
 
 export interface Assignment {
   id: number;

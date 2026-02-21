@@ -43,6 +43,15 @@ export const serviceRequestsAPI = {
   getAll: () => api.get('/service-requests'),
   getById: (id: string | number) => api.get(`/service-requests/${id}`),
   create: (data: any) => api.post('/service-requests', data),
+  // Contractor: accept or reject a pending request
+  respond: (requestId: number, action: 'accept' | 'reject') =>
+    api.post('/requests/respond', { request_id: requestId, action }),
+  // Contractor: mark midpoint or final completion
+  updateProgress: (requestId: number, stage: 'midpoint' | 'final', notes?: string) =>
+    api.post('/requests/progress', { request_id: requestId, stage, notes }),
+  // Client: approve or decline a contractor progress update
+  confirmProgress: (requestId: number, stage: 'midpoint' | 'final', action: 'approve' | 'decline', reason?: string) =>
+    api.post('/requests/confirm', { request_id: requestId, stage, action, reason }),
 };
 
 export const walletAPI = {
@@ -75,17 +84,16 @@ export const aiAPI = {
 };
 
 export const paymentsAPI = {
-  initiateSTKPush: (data: { phone: string; amount: number; description: string }) =>
-    api.post('/payments/stkpush', data),
-};
-
-export const adminAPI = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  verifyContractor: (data: { contractor_id: number; action: 'approve' | 'reject'; reason?: string }) =>
-    api.post('/admin/verify', data),
-  createUser: (data: any) => api.post('/admin/users', data),
-  updateUser: (id: number, data: any) => api.put('/admin/users', { id, ...data }),
-  deleteUser: (id: number) => api.delete('/admin/users', { data: { id } }),
+  // Pay 20% deposit to start work
+  payDeposit: (data: { phone: string; amount: number; service_request_id: number }) =>
+    api.post('/payments/stkpush', { ...data, payment_stage: 'deposit' }),
+  // Pay 80% balance after midpoint is approved
+  payBalance: (data: { phone: string; amount: number; service_request_id: number }) =>
+    api.post('/payments/stkpush', { ...data, payment_stage: 'balance' }),
+  // General wallet top-up (not tied to a service request)
+  depositWallet: (data: { phone: string; amount: number; description?: string }) =>
+    api.post('/wallet/deposit', data),
 };
 
 export { api, getErrorMessage };
+

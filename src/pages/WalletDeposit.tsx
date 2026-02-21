@@ -33,7 +33,7 @@ const WalletDeposit: React.FC = () => {
     setLoading(true);
 
     try {
-      await paymentsAPI.initiateSTKPush({
+      await paymentsAPI.depositWallet({
         amount: parseFloat(amount),
         phone,
         description: 'Wallet Deposit'
@@ -100,8 +100,8 @@ const WalletDeposit: React.FC = () => {
                     type="button"
                     onClick={() => setAmount(amt.toString())}
                     className={`py-3 rounded-xl font-bold transition-all text-sm border ${amount === amt.toString()
-                        ? 'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/20'
-                        : 'bg-white/5 border-white/5 text-gray-400 hover:border-white/10 hover:bg-white/[0.08]'
+                      ? 'bg-primary-500 border-primary-500 text-white shadow-lg shadow-primary-500/20'
+                      : 'bg-white/5 border-white/5 text-gray-400 hover:border-white/10 hover:bg-white/[0.08]'
                       }`}
                   >
                     {amt >= 1000 ? `${amt / 1000}K` : amt}

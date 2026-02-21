@@ -1,299 +1,327 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { contractorsAPI, assignmentsAPI, walletAPI } from '../services/api';
-import type { ContractorProfile, Assignment, WalletBalance } from '../types';
+import { contractorsAPI, serviceRequestsAPI, walletAPI } from '../services/api';
+import type { WalletBalance } from '../types';
 import {
-  FiBriefcase,
-  FiStar,
-  FiClock,
-  FiTrendingUp,
-  FiMapPin,
-  FiCheck,
-  FiX,
-  FiChevronRight,
-  FiActivity,
-  FiZap,
-  FiShield
+  FiBriefcase, FiStar, FiClock, FiTrendingUp, FiMapPin, FiCheck, FiX,
+  FiChevronRight, FiActivity, FiZap, FiShield, FiCheckCircle, FiAlertCircle,
+  FiDollarSign, FiEdit
 } from 'react-icons/fi';
 
-const ContractorDashboard: React.FC = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<ContractorProfile | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [wallet, setWallet] = useState<WalletBalance | null>(null);
-  const [loading, setLoading] = useState(true);
+// ─── Progress Notes Modal ────────────────────────────────────────────────────
+const ProgressModal: React.FC<{
+  requestId: number;
+  requestTitle: string;
+  stage: 'midpoint' | 'final';
+  onClose: () => void;
+  onSubmitted: () => void;
+}> = ({ requestId, requestTitle, stage, onClose, onSubmitted }) => {
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
-      const [profileRes, assignmentsRes, walletRes] = await Promise.all([
-        contractorsAPI.getMe(),
-        assignmentsAPI.getPending(),
-        walletAPI.getBalance(),
-      ]);
-      setProfile(profileRes.data);
-      setAssignments(assignmentsRes.data);
-      setWallet(walletRes.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      await serviceRequestsAPI.updateProgress(requestId, stage, notes);
+      setMsg('✅ Update submitted! Waiting for client confirmation.');
+      setTimeout(() => { onSubmitted(); onClose(); }, 2500);
+    } catch (err: any) {
+      setMsg('❌ ' + (err.response?.data?.error || 'Failed to submit update.'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAcceptAssignment = async (assignmentId: number) => {
-    try {
-      await assignmentsAPI.accept(assignmentId);
-      fetchData();
-    } catch (error) {
-      console.error('Error accepting assignment:', error);
-    }
-  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="glass-card p-8 max-w-md w-full mx-4 space-y-6">
+        <div>
+          <h2 className="text-2xl font-black text-white mb-1">
+            {stage === 'midpoint' ? 'Mark 50% Milestone' : 'Mark Project Complete'}
+          </h2>
+          <p className="text-gray-400 text-sm">For: <span className="text-white font-semibold">{requestTitle}</span></p>
+        </div>
+        <p className="text-gray-400 text-sm leading-relaxed">
+          {stage === 'midpoint'
+            ? 'Inform the client that the project is halfway done. They will confirm and then pay the remaining 80% balance.'
+            : 'Inform the client that the project is fully complete. They will confirm and the escrow funds will be released to you.'}
+        </p>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Progress Notes (Optional)</label>
+          <textarea
+            rows={4} value={notes} onChange={e => setNotes(e.target.value)}
+            placeholder={stage === 'midpoint' ? 'Describe what has been completed so far...' : 'Describe what was completed...'}
+            className="glass-input w-full py-3 resize-none"
+          />
+        </div>
+        {msg && <p className="text-sm text-center py-2 px-4 rounded-xl bg-white/5">{msg}</p>}
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 btn-secondary h-12">Cancel</button>
+          <button onClick={handleSubmit} disabled={loading} className="flex-1 btn-primary h-12">
+            {loading ? <span className="animate-spin">⟳</span> : 'Submit Update'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-  const handleDeclineAssignment = async (assignmentId: number) => {
+// ─── Main Contractor Dashboard ───────────────────────────────────────────────
+const ContractorDashboard: React.FC = () => {
+  const { user } = useAuth() as any;
+  const [profile, setProfile] = useState<any>(null);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [wallet, setWallet] = useState<WalletBalance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [progressModal, setProgressModal] = useState<{ id: number; title: string; stage: 'midpoint' | 'final' } | null>(null);
+  const [respondingId, setRespondingId] = useState<number | null>(null);
+
+  const fetchData = useCallback(async () => {
     try {
-      await assignmentsAPI.decline(assignmentId);
+      const [profileRes, reqRes, walletRes] = await Promise.all([
+        contractorsAPI.getMe(),
+        serviceRequestsAPI.getAll(),
+        walletAPI.getBalance(),
+      ]);
+      setProfile(profileRes.data);
+      setRequests(Array.isArray(reqRes.data) ? reqRes.data : []);
+      setWallet(walletRes.data);
+    } catch (e) {
+      console.error('Contractor dashboard error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleRespond = async (requestId: number, action: 'accept' | 'reject') => {
+    setRespondingId(requestId);
+    try {
+      await serviceRequestsAPI.respond(requestId, action);
       fetchData();
-    } catch (error) {
-      console.error('Error declining assignment:', error);
+    } catch (e) {
+      console.error('Respond error:', e);
+    } finally {
+      setRespondingId(null);
     }
   };
 
   const toggleAvailability = async () => {
-    if (profile) {
-      try {
-        await contractorsAPI.updateAvailability(!profile.is_available);
-        setProfile({ ...profile, is_available: !profile.is_available });
-      } catch (error) {
-        console.error('Error updating availability:', error);
-      }
+    if (!profile) return;
+    try {
+      await contractorsAPI.updateAvailability(!profile.is_available);
+      setProfile({ ...profile, is_available: !profile.is_available });
+    } catch (e) {
+      console.error('Availability error:', e);
     }
-  };
-
-  const getVerificationStatus = () => {
-    if (!profile) return null;
-    const statuses: Record<string, { label: string; color: string; icon: any }> = {
-      approved: { label: 'Verified Pro', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20', icon: FiShield },
-      pending: { label: 'Pending Review', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', icon: FiClock },
-      under_review: { label: 'Under Review', color: 'text-blue-400 bg-blue-400/10 border-blue-400/20', icon: FiActivity },
-      rejected: { label: 'Action Required', color: 'text-red-400 bg-red-400/10 border-red-400/20', icon: FiX },
-    };
-    const status = profile?.status || profile?.verification_status || 'pending';
-    return (status && statuses[status]) || { label: status || 'Under Review', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20', icon: FiZap };
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 font-medium">Loading professional dashboard...</p>
+          <div className="w-16 h-16 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  const verif = getVerificationStatus();
+  const pending = requests.filter(r => r.status === 'pending');
+  const inProgress = requests.filter(r => ['accepted', 'deposit_paid', 'pending_midpoint_approval', 'midpoint_approved', 'balance_paid', 'pending_final_approval'].includes(r.status));
+  const completed = requests.filter(r => r.status === 'completed');
+
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, { label: string; color: string }> = {
+      accepted: { label: 'Awaiting Client Deposit', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
+      deposit_paid: { label: 'Deposit Paid – Begin Work', color: 'text-blue-400 bg-blue-400/10 border-blue-400/20' },
+      pending_midpoint_approval: { label: 'Midpoint Pending Approval', color: 'text-orange-400 bg-orange-400/10 border-orange-400/20' },
+      midpoint_approved: { label: 'Midpoint Approved', color: 'text-purple-400 bg-purple-400/10 border-purple-400/20' },
+      balance_paid: { label: 'Balance Paid – Finish the Job', color: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20' },
+      pending_final_approval: { label: 'Completion Pending Approval', color: 'text-orange-400 bg-orange-400/10 border-orange-400/20' },
+      completed: { label: 'Completed & Paid', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+    };
+    return map[status] || { label: status, color: 'text-gray-400 bg-gray-400/10 border-gray-400/20' };
+  };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 md:px-8 bg-[#030712]">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+    <div className="min-h-screen pt-24 pb-12 px-4 md:px-8">
+      {progressModal && (
+        <ProgressModal
+          requestId={progressModal.id}
+          requestTitle={progressModal.title}
+          stage={progressModal.stage}
+          onClose={() => setProgressModal(null)}
+          onSubmitted={fetchData}
+        />
+      )}
+
+      <div className="max-w-7xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-black text-white tracking-tight">{profile?.business_name || 'Pro Center'}</h1>
-              {verif && (
-                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${verif.color}`}>
-                  <verif.icon className="text-xs" />
-                  {verif.label}
-                </div>
-              )}
-            </div>
-            <p className="text-gray-400">Welcome back, {profile?.full_name || user?.full_name || 'Pro'}. Here is your operations overview.</p>
+            <h1 className="text-4xl font-black text-white tracking-tight mb-1">Pro Dashboard</h1>
+            <p className="text-gray-400">Hello, <span className="text-white font-semibold">{profile?.business_name || user?.full_name}</span></p>
           </div>
-          <button
-            onClick={toggleAvailability}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${profile?.is_available
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5'
-              : 'bg-white/5 text-gray-400 border border-white/10 shadow-none'
-              } group`}
-          >
-            <div className={`w-2 h-2 rounded-full ${profile?.is_available ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
-            {profile?.is_available ? 'Available for Work' : 'Going Offline'}
-          </button>
-        </div>
-
-        {/* Core Metrics grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-10">
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-yellow-500/10 text-yellow-500">
-                <FiStar className="text-xl" />
-              </div>
-              <span className="text-gray-400 text-sm font-medium">Performance Rating</span>
-            </div>
-            <p className="text-3xl font-black text-white">{profile?.rating?.toFixed(1) || '0.0'} <span className="text-xs text-gray-500 font-normal">/ 5.0</span></p>
-          </div>
-
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400">
-                <FiBriefcase className="text-xl" />
-              </div>
-              <span className="text-gray-400 text-sm font-medium">Projects Done</span>
-            </div>
-            <p className="text-3xl font-black text-white">{profile?.total_jobs_completed}</p>
-          </div>
-
-          <div className="glass-card p-6 col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-600/5 to-transparent">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 rounded-full blur-3xl -mr-16 -mt-16" />
-            <div className="flex items-center justify-between relative">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-                  <FiBriefcase className="text-xl" />
-                </div>
-                <div>
-                  <span className="text-gray-400 text-sm font-medium">Withdrawable Income</span>
-                  <p className="text-3xl font-black text-white">
-                    KES {wallet?.available_balance?.toLocaleString() || '0'}
-                  </p>
-                </div>
-              </div>
-              <Link to="/wallet/withdraw" className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all border border-white/10 text-sm">
-                Withdraw
-              </Link>
-            </div>
+          <div className="flex items-center gap-3">
+            {profile?.status === 'approved' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <FiShield /> Verified Pro
+              </span>
+            )}
+            <button
+              onClick={toggleAvailability}
+              className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${profile?.is_available ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
+            >
+              {profile?.is_available ? '🟢 Available' : '🔴 Unavailable'}
+            </button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Assignments List */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <FiZap className="text-blue-400" />
-                New Opportunities
-              </h2>
-              <span className="text-xs text-gray-500 font-medium">{(Array.isArray(assignments) ? assignments.length : 0)} pending requests</span>
-            </div>
-
-            {(!Array.isArray(assignments) || assignments.length === 0) ? (
-              <div className="glass-card p-12 text-center border-dashed border-white/5 bg-transparent">
-                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FiBriefcase className="text-3xl text-gray-600" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">No new assignments</h3>
-                <p className="text-gray-400 mb-0 max-w-sm mx-auto">
-                  Stay active! Clients will see your profile when they post matching jobs.
-                </p>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'New Requests', value: pending.length, icon: FiAlertCircle, color: 'text-yellow-400' },
+            { label: 'In Progress', value: inProgress.length, icon: FiTrendingUp, color: 'text-blue-400' },
+            { label: 'Completed', value: completed.length, icon: FiCheckCircle, color: 'text-emerald-400' },
+            { label: 'Wallet (KES)', value: wallet?.available_balance ? Number(wallet.available_balance).toLocaleString() : '0', icon: FiDollarSign, color: 'text-purple-400' },
+          ].map(s => (
+            <div key={s.label} className="glass-card p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{s.label}</span>
+                <s.icon className={`${s.color} text-lg`} />
               </div>
-            ) : (
-              <div className="grid gap-4">
-                {Array.isArray(assignments) && assignments.map((assignment) => (
-                  <div key={assignment.id} className="glass-card p-6 group hover:bg-white/[0.07] transition-all border border-white/5 hover:border-blue-500/30">
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                            {assignment?.service_request?.title || 'Untitled Request'}
-                          </h3>
-                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/5 text-gray-400 font-bold uppercase tracking-wider border border-white/10">
-                            {typeof assignment?.service_request?.category === 'object' ? (assignment.service_request.category as any).name : assignment?.service_request?.category || 'General'}
+              <p className="text-2xl font-black text-white">{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Pending Requests */}
+        {pending.length > 0 && (
+          <div>
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><FiAlertCircle className="text-yellow-400" /> New Service Requests</h2>
+            <div className="space-y-4">
+              {pending.map(req => (
+                <div key={req.id} className="glass-card p-6 border-yellow-500/10">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-bold text-lg mb-1 truncate">{req.title}</h3>
+                      <p className="text-gray-400 text-sm line-clamp-2 mb-2">{req.description}</p>
+                      <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                        {req.location && <span className="flex items-center gap-1"><FiMapPin /> {req.location}</span>}
+                        {req.budget > 0 && <span className="flex items-center gap-1 text-emerald-400 font-semibold"><FiDollarSign /> Budget: KES {req.budget?.toLocaleString()}</span>}
+                        {req.estimated_duration && <span className="flex items-center gap-1"><FiClock /> {req.estimated_duration}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button
+                        onClick={() => handleRespond(req.id, 'reject')}
+                        disabled={respondingId === req.id}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                      >
+                        <FiX /> Decline
+                      </button>
+                      <button
+                        onClick={() => handleRespond(req.id, 'accept')}
+                        disabled={respondingId === req.id}
+                        className="btn-primary flex items-center gap-1.5 !py-2.5 !px-5 text-sm"
+                      >
+                        <FiCheck /> Accept
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active Projects */}
+        {inProgress.length > 0 && (
+          <div>
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><FiTrendingUp className="text-blue-400" /> Active Projects</h2>
+            <div className="space-y-4">
+              {inProgress.map(req => {
+                const badge = getStatusBadge(req.status);
+                const canMarkMidpoint = req.status === 'deposit_paid';
+                const canMarkFinal = req.status === 'balance_paid';
+                const isPendingApproval = ['pending_midpoint_approval', 'pending_final_approval'].includes(req.status);
+                return (
+                  <div key={req.id} className="glass-card p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="text-white font-bold text-lg truncate">{req.title}</h3>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.color}`}>
+                            {badge.label}
                           </span>
                         </div>
-                        <p className="text-gray-400 text-sm mb-4 leading-relaxed line-clamp-2">
-                          {assignment?.service_request?.description || 'No description provided.'}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-6">
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <FiTrendingUp className="text-emerald-400/60" />
-                            Job Budget: <span className="text-gray-200 font-bold">KES {assignment?.service_request?.budget?.toLocaleString() || '0'}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <FiMapPin className="text-purple-400/60" />
-                            {assignment?.service_request?.location || 'Location N/A'}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <FiClock className="text-blue-400/60" />
-                            {assignment?.service_request?.created_at ? new Date(assignment.service_request.created_at).toLocaleDateString() : 'Just now'}
-                          </div>
+                        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                          {req.location && <span className="flex items-center gap-1"><FiMapPin /> {req.location}</span>}
+                          {req.budget > 0 && <span className="flex items-center gap-1"><FiDollarSign /> KES {req.budget?.toLocaleString()}</span>}
                         </div>
                       </div>
-
-                      <div className="flex md:flex-col gap-3 flex-shrink-0">
-                        <button
-                          onClick={() => handleAcceptAssignment(assignment.id)}
-                          className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/10"
-                        >
-                          <FiCheck /> Accept
-                        </button>
-                        <button
-                          onClick={() => handleDeclineAssignment(assignment.id)}
-                          className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-gray-400 px-6 py-2.5 rounded-xl font-bold transition-all border border-white/10 hover:border-red-500/20"
-                        >
-                          <FiX /> Decline
-                        </button>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {isPendingApproval && (
+                          <span className="text-xs text-orange-400 font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                            <FiClock /> Waiting for client confirmation...
+                          </span>
+                        )}
+                        {canMarkMidpoint && (
+                          <button
+                            onClick={() => setProgressModal({ id: req.id, title: req.title, stage: 'midpoint' })}
+                            className="btn-primary flex items-center gap-1.5 !py-2.5 !px-5 text-sm bg-blue-600 border-blue-600"
+                          >
+                            <FiEdit /> Mark 50% Done
+                          </button>
+                        )}
+                        {canMarkFinal && (
+                          <button
+                            onClick={() => setProgressModal({ id: req.id, title: req.title, stage: 'final' })}
+                            className="btn-primary flex items-center gap-1.5 !py-2.5 !px-5 text-sm bg-emerald-600 border-emerald-600"
+                          >
+                            <FiCheckCircle /> Mark Complete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Dashboard Sidebar */}
-          <div className="space-y-6">
-            <div className="glass-card p-6 bg-gradient-to-br from-purple-600/10 to-transparent">
-              <FiActivity className="text-3xl text-purple-400 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">Revenue Growth</h3>
-              <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                You've earned <span className="text-white font-bold">KES 12,400</span> more than last week. Keep up the great work!
-              </p>
-              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-500 w-[65%] rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
-              </div>
-            </div>
-
-            <div className="glass-card p-6 overflow-hidden relative">
-              <div className="absolute -right-10 -top-10 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl" />
-              <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Link to="/profile/edit" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
-                      <FiZap className="text-sm" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-300 group-hover:text-white">Update Services</span>
-                  </div>
-                  <FiChevronRight className="text-gray-500 group-hover:text-blue-400" />
-                </Link>
-                <Link to="/wallet/history" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                      <FiTrendingUp className="text-sm" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-300 group-hover:text-white">Tax Reports</span>
-                  </div>
-                  <FiChevronRight className="text-gray-500 group-hover:text-emerald-400" />
-                </Link>
-                <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-400 flex items-center justify-center">
-                      <FiShield className="text-sm" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-300 group-hover:text-white">Security Center</span>
-                  </div>
-                  <FiChevronRight className="text-gray-500 group-hover:text-orange-400" />
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Completed Projects */}
+        {completed.length > 0 && (
+          <div>
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><FiCheckCircle className="text-emerald-400" /> Completed Projects</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {completed.map(req => (
+                <div key={req.id} className="glass-card p-5 opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="flex items-start gap-3">
+                    <FiCheckCircle className="text-emerald-400 text-xl mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-semibold truncate">{req.title}</h3>
+                      {req.budget > 0 && <p className="text-emerald-400 text-sm font-semibold">KES {req.budget?.toLocaleString()} earned</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {requests.length === 0 && (
+          <div className="glass-card p-16 text-center">
+            <FiZap className="text-5xl text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">No Requests Yet</h3>
+            <p className="text-gray-500">Service requests assigned to you will appear here.</p>
+          </div>
+        )}
       </div>
     </div>
   );
