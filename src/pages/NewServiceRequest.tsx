@@ -13,6 +13,7 @@ const NewServiceRequest: React.FC = () => {
   const preSelectedContractor = searchParams.get('contractor_id');
   const [aiEstimate, setAiEstimate] = useState<any>(null);
   const [estimating, setEstimating] = useState(false);
+  const [selectedContractor, setSelectedContractor] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     category: '',
@@ -36,6 +37,30 @@ const NewServiceRequest: React.FC = () => {
       console.error('Error fetching categories:', error);
     }
   };
+
+  const fetchContractorDetails = async (cid: string) => {
+    try {
+      const response = await api.get('/contractors');
+      const contractor = response.data.find((c: any) => c.id === parseInt(cid));
+      if (contractor) {
+        setSelectedContractor(contractor);
+        // Pre-select category if possible
+        const category = categories.find(cat => cat.name === contractor.category);
+        if (category) {
+          setFormData(prev => ({ ...prev, category: category.id.toString() }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching contractor details:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (preSelectedContractor) {
+      fetchContractorDetails(preSelectedContractor);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preSelectedContractor, categories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +126,25 @@ const NewServiceRequest: React.FC = () => {
             <p className="text-gray-500 font-medium">Define your project details and find the perfect expert.</p>
           </div>
         </div>
+
+        {selectedContractor && (
+          <div className="glass-card p-6 mb-8 border-primary-500/30 bg-primary-500/5 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center border border-primary-500/20 text-primary-400 font-black">
+                  {selectedContractor.business_name?.charAt(0) || selectedContractor.full_name?.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-white font-bold">Requesting from {selectedContractor.business_name || selectedContractor.full_name}</h3>
+                  <p className="text-gray-500 text-xs">Direct project request for their {selectedContractor.category} expertise.</p>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-1 text-emerald-500 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <FiShield /> Direct Match
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">

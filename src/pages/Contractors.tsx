@@ -128,11 +128,14 @@ const Contractors: React.FC = () => {
 
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary-400 transition-colors">
-                    {contractor.business_name}
+                    {contractor.business_name || contractor.full_name}
                   </h3>
-                  <div className="flex items-center text-gray-500 text-sm gap-2">
+                  <div className="flex items-center text-gray-500 text-sm gap-2 mb-2">
                     <FiMapPin className="text-xs" /> {contractor.location}
                   </div>
+                  <p className="text-gray-400 text-xs line-clamp-2 italic">
+                    {contractor.bio || `Expert ${contractor.category} professional based in ${contractor.location}.`}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-6">
@@ -143,7 +146,7 @@ const Contractors: React.FC = () => {
                     <div className="text-[9px] text-gray-500 font-bold uppercase mt-1">Rating</div>
                   </div>
                   <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                    <div className="text-white font-black">{contractor.total_jobs_completed}</div>
+                    <div className="text-white font-black">{contractor.total_jobs_completed || 0}</div>
                     <div className="text-[9px] text-gray-500 font-bold uppercase mt-1">Jobs</div>
                   </div>
                   <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
