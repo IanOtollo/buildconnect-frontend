@@ -41,14 +41,16 @@ const Contractors: React.FC = () => {
 
   // Filter by category if categoryId is present
   const categoryFilteredContractors = categoryId
-    ? contractors.filter(c => c.category.toLowerCase() === categoryName.toLowerCase())
+    ? contractors.filter(c =>
+      (c.category?.toLowerCase() || '') === (categoryName?.toLowerCase() || '')
+    )
     : contractors;
 
   const filteredContractors = categoryFilteredContractors.filter(
     (contractor) =>
-      contractor.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contractor.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contractor.location.toLowerCase().includes(searchTerm.toLowerCase())
+      (contractor.business_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (contractor.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (contractor.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {

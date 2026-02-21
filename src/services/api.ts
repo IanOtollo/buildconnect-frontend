@@ -53,6 +53,7 @@ export const walletAPI = {
 
 export const contractorsAPI = {
   getAll: () => api.get('/contractors'),
+  getById: (id: string | number) => api.get(`/contractors/${id}`),
   getMe: () => api.get('/contractors/me'),
   updateAvailability: (is_available: boolean) => api.patch('/contractors/me', { is_available }),
 };
